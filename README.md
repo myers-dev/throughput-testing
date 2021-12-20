@@ -229,14 +229,19 @@ ip link add vxlan2 type vxlan id 2 remote 10.2.0.4 dstport 4789 dev eth0
 ip link set vxlan2 up
 ip addr add 10.78.0.2/30 dev vxlan2
 
-on DS4_v2 spoke to hub , bypassing firewall
+on DS4_v2 spoke to hub , bypassing firewall . vxlan 1 to vxlan 2 , 64 flows
 
 [SUM]   0.00-10.00  sec  6.52 GBytes  5.60 Gbits/sec    0             sender
 [SUM]   0.00-10.00  sec  6.44 GBytes  5.53 Gbits/sec                  receiver
 
-DS5_v2 spoke1 to spoke2
+DS5_v2 spoke1 to spoke2 vxlan1 to vxlan1 / 64 flows
 
 [SUM]   0.00-10.00  sec  3.06 GBytes  2.63 Gbits/sec  1326             sender
 [SUM]   0.00-10.00  sec  2.93 GBytes  2.51 Gbits/sec                  receiver
+
+DS5_v2 spoke to spoke2 eth0 to eth0 / 64 flows
+
+[SUM]   0.00-10.00  sec  5.54 GBytes  4.76 Gbits/sec  10706             sender
+[SUM]   0.00-10.00  sec  5.46 GBytes  4.69 Gbits/sec                  receiver
 
 ```
