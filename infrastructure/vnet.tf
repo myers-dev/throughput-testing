@@ -22,26 +22,27 @@ module "nsg" {
   ]
 }
 
+
 module "vnet" {
   source  = "Azure/vnet/azurerm"
   version = "2.5.0"
 
-  count = length(var.vnets)
+  for_each = var.vnets
 
   resource_group_name = var.resource_group_name
-  vnet_name           = "${var.vnets[count.index]["name"]}-vnet"
+  vnet_name           = each.key
 
-  address_space = var.vnets[count.index]["address_space"]
+  address_space = each.value.address_space
 
-  subnet_names    = var.vnets[count.index]["subnet_names"]
-  subnet_prefixes = var.vnets[count.index]["subnet_prefixes"]
+  subnet_names    = each.value.subnet_names
+  subnet_prefixes = each.value.subnet_prefixes
 
-  subnet_enforce_private_link_endpoint_network_policies = var.vnets[count.index]["enforce_private_link_endpoint_network_policies"]
-  subnet_enforce_private_link_service_network_policies  = var.vnets[count.index]["enforce_private_link_service_network_policies"]
+  subnet_enforce_private_link_endpoint_network_policies = each.value.enforce_private_link_endpoint_network_policies
+  subnet_enforce_private_link_service_network_policies  = each.value.enforce_private_link_service_network_policies
 
-  nsg_ids = {
-    "default" = module.nsg.network_security_group_id
-  }
+  #nsg_ids = {
+  #  "default" = module.nsg.network_security_group_id
+  #}
 
   tags          = var.tags
   vnet_location = var.location
@@ -50,4 +51,12 @@ module "vnet" {
   depends_on = [
     azurerm_resource_group.rg
   ]
+}
+
+resource "azurerm_subnet_network_security_group_association" "this" {
+
+  for_each = var.vnets
+
+  subnet_id                 = module.vnet[each.key].vnet_subnets[0]
+  network_security_group_id = module.nsg.network_security_group_id
 }

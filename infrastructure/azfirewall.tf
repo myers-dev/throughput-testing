@@ -1,5 +1,6 @@
 resource "azurerm_public_ip" "azfwpip" {
-  name                = "azfwpip"
+  name                = "AZFWPIP"
+  domain_name_label = "azfwpip"
   location            = var.location
   resource_group_name = var.resource_group_name
   allocation_method   = "Static"
@@ -8,21 +9,27 @@ resource "azurerm_public_ip" "azfwpip" {
 
 resource "azurerm_firewall" "azfw" {
 
-  count = 1
+  dns_servers = null
 
-  name                = "azf"
+  private_ip_ranges = null
+
+  name                = "AZFWP"
   location            = var.location
   resource_group_name = var.resource_group_name
 
-  #sku_tier = "Premium"
-
+  sku_tier = "Premium"
+   
+  zones = [ "1" , "2" , "3" ]
+  
   firewall_policy_id = azurerm_firewall_policy.azfw-policy.id
 
   ip_configuration {
-    name                 = "configuration"
-    subnet_id            = module.vnet[0].vnet_subnets[3]
+    name                 = "AZFWPIP"
+    subnet_id            = module.vnet["AZFPVNET"].vnet_subnets[1]
     public_ip_address_id = azurerm_public_ip.azfwpip.id
   }
+
+  tags = null
 }
 
 resource "azurerm_firewall_policy" "azfw-policy" {

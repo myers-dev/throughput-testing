@@ -1,207 +1,242 @@
-# Azure Network Flow Limits Lab
+# Azure Fierewall premium throughput testing
 
 ## Overview
 
-In the provided lab, we examined the Azure Network Flow Limits, as stated in Microsoft documentation [Virtual machine network bandwidth](https://docs.microsoft.com/en-us/azure/virtual-network/virtual-machine-network-throughput#network-flow-limits) 
+The following topology used for the throughput testing. Classical hub-and-spoke topology with Azure Firewall Premium , deployed in the hub. 
 
-Specifically we will address the statement below from the section [Flow Limits and Active Connections Recommendations](https://docs.microsoft.com/en-us/azure/virtual-network/virtual-machine-network-throughput#flow-limits-and-active-connections-recommendations)
+![Topology](supplementals/img/Topology0.png)
 
->Today, the Azure networking stack supports 1M total flows (500k inbound and 500k outbound) for a VM. Total active connections that can be handled by a VM in different scenarios are as follows.
->
-> VMs that belongs to VNET can handle 500k active connections for all VM sizes with 500k active flows in each direction.
-> VMs with network virtual appliances (NVAs) such as gateway, proxy, firewall can handle 250k active connections with 500k active flows in each direction due
-> to the forwarding and additional new flow creation on new connection setup to the next hop
+During testing two VM sizes were used : DS4_v2 and DS5_v2 which, should provide 6 and 12Gbps of network perormance.
 
-## Executive summary
+https://docs.microsoft.com/en-us/azure/virtual-machines/dv2-dsv2-series
 
-The results of the lab were found to be generally in agreement with the limits that were stated in the documentation. (1M total flows (500k inbound and 500k outbound ; 250k for NVA ) The byproduct of this effort was that a few limitations were discovered, presumably linked to the size of the VM, software and the distribution of the load.
+## Verification
 
-## Baseline infrastructure deployment
-Baseline topology consists of a hub-and-spoke topology with Palo-Alto VM300 deployed in the hub. Address space is configured as follows:
+Verifying that internet connectivity is in-fact thought the firewall
 
-VNET | Function | Address space
---- | --- | ---
-0| Hub | 10.2.0.0/16
-1 | Spoke 1| 10.0.0./16
-2 | Spoke 2 | 10.1.0.0/16
-
-So we can inspect the number of flows in the NVA in the hub we will originate flows in VNET1 (client) and terminate them in VNET2 (server). 
-
-![Baseline Topology](supplementals/img/Topology0.png)
-
-Topology gets deployed by running *terraform init/plan/apply* in the infrastructure folder. 
-
-The basic configuration of the VM-300 is required. ( Interfaces, Virtual Router, Static Routes, Security zones ). The [reference configuration](supplementals/paloalto/candidate-config.xml) can be used from the supplemental folder. 
-
-### Software flow generation
-A basic approach to flow generation that any software developer would consider is to use the standard language libraries. In the example below, in the absence of scale and optimization, the usage of the "socket" library in Python could not handle 500k flows. The example is provided for educational purposes only. [Python 3.6](https://tecadmin.net/how-to-install-python-3-9-on-ubuntu-20-04) or later is required.
-
-* [client.py](supplementals/python/client.py)
-* [server.py](supplementals/python/server.py)
-
-### Tools for benchmarking
-[*wrk*](https://github.com/wg/wrk) is a modern HTTP benchmarking tool capable of generating significant load when run on a single multi-core CPU. It combines a multithreaded design with scalable event notification systems such as epoll and kqueue.
-Typical wrk outpul looks like below
-```bash
-root@wrk:/# wrk -t12 -c400 -d30s http://10.1.0.4:80
-Running 30s test @ http://10.1.0.4:80
-  12 threads and 400 connections
-  Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency    39.60ms   36.48ms 718.47ms   84.94%
-    Req/Sec     0.95k   169.39     1.78k    69.22%
-  340231 requests in 30.05s, 278.70MB read
-Requests/sec:  11322.80
-Transfer/sec:      9.28MB
 ```
-In our scenario, WRK is not suited right out of the box, so we have to optimize it to meet our requirements. 
+az network firewall show --name AZFWP --resource-group AZFP --query ipConfigurations[].publicIpAddress[].id
+[
+  "/subscriptions/6fd2b24c-1ffa-43ca-abc1-8127c30dcb39/resourceGroups/AZFP/providers/Microsoft.Network/publicIPAddresses/AZFWPIP"
+]
 
-```bash
-# wrk -c1024 -t128 -d300s http://10.1.0.4:80
-unable to create thread 115: Too many open files
+> az network public-ip show --id="/subscriptions/6fd2b24c-1ffa-43ca-abc1-8127c30dcb39/resourceGroups/AZFP/providers/Microsoft.Network/publicIPAddresses/AZFWPIP" --query=ipAddress
+"20.84.235.151"
 
-# wrk -c2024 -t16 -d300s http://10.1.0.4:80
-unable to create thread 13: Too many open files
-```
-Due to the limit above it's time to use AKS for the purpose of spreading the load across multiple containers. To do so, we need to create a container with *wrk*, *nginx* and some networking tools built into it.
-Container will be used as a source and the client in scenario 3.
+root@spoke1-vm:~# curl https://api.my-ip.io/ip
+20.84.235.151
 
-```Docker
-FROM ubuntu:20.04
-RUN apt-get update -y
-RUN apt-get install nginx -y
-RUN apt-get install software-properties-common -y
-RUN add-apt-repository -y "deb http://archive.ubuntu.com/ubuntu groovy universe"
-RUN apt-get update -y
-RUN apt-get install net-tools -y
-RUN apt-get install iputils-ping -y
-RUN apt-get install inetutils-traceroute -y
-RUN apt-get install iproute2 -y
-RUN apt-get install wrk -y
-```
-The docker container will be pushed to the ACR container registry.
-```bash
-az acr create -g $rg -n acrcopernic --sku Basic --admin-enabled
-az acr login --name acrcopernic
+root@AZFPVNET-vm:~# curl https://api.my-ip.io/ip
+20.84.235.151
 
-docker build --network=host -t andrew/wrk .
-docker tag andrew/wrk acrcopernic.azurecr.io/wrk
-docker push acrcopernic.azurecr.io/wrk
-```
-You can run Docker from a user mode by adding your account to the group *docker*
-
-```bash
-sudo usermod -aG docker andrew
+root@spoke2-vm:~# curl https://api.my-ip.io/ip
+20.84.235.151
 ```
 
-## Scenario 1. AKS to AKS via PaloAlto VM300
+## Speedtest - Azure Firewall Premium , AFWEnableAccelnet = False 
 
-We will use wrk as a *deployment* on AKS1 in the following scenario. Wrk will target load balancer in front of NGINX deployed in AKS2. Traffic is routed to VM300 running in the hub and reflected back to the target in Spoke2.
+Basic test with Speedtest , configured as described at https://www.speedtest.net/apps/cli
 
-![AKS to AKS via PaloAlto VM300](supplementals/img/Topology1.png)
-
-Getting rg and subnets variables from the *infrastructure* folder
-```bash
-
-rg=`terraform output rg | tr -d "\""`
-
-subnet1=`terraform output subnet1_id | tr -d "\""`
-subnet2=`terraform output subnet2_id | tr -d "\""`
-
-vnet2_id=`terraform output vnet2_id | tr -d "\""`
 ```
-Creating AKS1 ( deployed in *Spoke1* ) and getting credentials from it
-```bash  
-az aks create --resource-group "${rg}" --name aks1 --node-count 16 --enable-addons monitoring \
---generate-ssh-keys --vnet-subnet-id "${subnet1}" --service-cidr 172.16.0.0/24 --dns-service-ip 172.16.0.10 \
---network-plugin azure --attach-acr acrcopernic --enable-cluster-autoscaler --min-count 1 --max-count 100
-
-az aks get-credentials --name aks1 --resource-group $rg
-
-kubectl config get-contexts
-kubectl config use-context aks1
-```
-Creating the deployment using wrk ACR image, instead of x.x.x.x use load balancer IP from the next step.
-```bash
-kubectl create deployment wrk --image=acrcopernic.azurecr.io/wrk:latest --replicas=240 -- bash -c "while true; do  wrk -t12 -c1200 -d3000s http://x.x.x.x:80 ; done "
-```
-Creating AKS2 ( deployed in Spoke2 ) and getting credentials from it
-```bash
-az aks create --resource-group "${rg}" --name aks2 --node-count 3 --enable-addons monitoring \
---generate-ssh-keys --vnet-subnet-id "${subnet2}" --service-cidr 172.16.0.0/24 --dns-service-ip 172.16.0.10 \
---network-plugin azure --attach-acr acrcopernic --enable-cluster-autoscaler --min-count 1 --max-count 100
-
-az aks get-credentials --name aks2 --resource-group $rg
-kubectl config get-contexts
-kubectl config use-context aks2
-```
-Role creation is necessery. [More here](https://github.com/MicrosoftLearning/AZ500-AzureSecurityTechnologies/issues/113)
-```
-aks_managed_id=$(az aks show --name aks2 --resource-group $rg --query identity.principalId -o tsv)
-az role assignment create --assignee $aks_managed_id --role "Contributor" --scope $vnet2_id
-```
-Creating nginx deployment and exposing it via internal load balancer. Use [aks2-lb.yaml](supplementals/aks/aks2-lb.yaml) as a template.
-```bash
-kubectl create deployment nginx --replicas=80 --image=nginx
-
-kubectl apply -f aks2-lb.yaml 
-```
-Look over following output to get an ip `10.1.0.129` of the lb.
-```bash
-kubectl get svc
-NAME         TYPE           CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
-kubernetes   ClusterIP      172.16.0.1     <none>        443/TCP        47h    
-nginx        LoadBalancer   172.16.0.103   10.1.0.129    80:30074/TCP   47h  
-```
-at this point traffic should start to flow. By looking at the `monitor` of PaloAlto VM we can count the total incoming and outbound flows. Its clearly far from 500 000 and stabilized around 170 000 in each direction.
-![PA](supplementals/img/palo-alto.png) Changing the number of pods or cluster nodes or the number of pods has no effect on that number. 
-
-## Scenario 2. AKS to AKS via Linux Router
-
-In the previous scenario, the total number of inbound and outbound flows is approximately 32% lower than that of the platform (320000 versus 500000). This problem may be related to Palo Alto VM size (D3_v2) or software limitations. As per the [specsheet](https://media.paloaltonetworks.com/documents/specsheet-vm-series-specsheet.pdf), VM-300 can handle 250000 sessions. 
-![General Capacities](supplementals/img/pa_specs.png)
-Let's determine how a standard Linux D3_v2 and DS4_v2 router performs. There are only two commands required to perform basic packet forwarding. `sysctl -w net.ipv4.ip_forward=1` and `sysctl -p` . 
-For more implementation details, please refer to [linux_router.tf](infrastructure/linux_router.tf). 
-
-![Topology](supplementals/img/Topology2.png)
-
-Update the routing table in route_table.tf with the updated NH and re-run Terraform apply. 
-![route_table.tf](supplementals/img/route_table.png)
-
-Ensure that target IP in wrk deployment on AKS1 match the service private IP of the AKS2.
-![deployment](supplementals/img/deployment-target.png)
-
-Linux Routers clearly outperform Palo Alto Routers in terms of performance. A total amount of flows has been created that is even bigger than the maximum number that is allowed by the platform. 
-
-### [DS4_v2](https://docs.microsoft.com/en-us/azure/virtual-machines/dv2-dsv2-series) flow performance:
-
-![DS4_v2](supplementals/img/linuxrouterDS4_v2.png)
-
-### [D3_v2](https://docs.microsoft.com/en-us/azure/virtual-machines/dv2-dsv2-series) flow performance:
-
-![D3_v2](supplementals/img/linuxrouterD3_v2.png)
-
-## Scenario 3. AKS to AKS via Azure Firewall.
-
-TBD. Cannot get a flow information directly from the firewall. 
-
-![Topology](supplementals/img/Topology3.png)
-
-Update the routing table in route_table.tf with the updated NH and re-run Terraform apply. 
-![route_table.tf](supplementals/img/azf_route_table.png)
-
-## Scenario 4. AKS to NGINX
-
-In the final scenario, we will try to exhaust all ports on the DS4 node using NGINX. 
-
-![Topology](supplementals/img/Topology4.png)
-
-
-```bash
-ip=`terraform output linux_router_private_ip | tr -d "\""`
-kubectl delete deploy/wrk
-kubectl create deployment wrk --image=acrcopernic.azurecr.io/wrk:latest --replicas=240 -- bash -c "while true; do  wrk -t12 -c1200 -d3000s http://$ip:80 ; done "
+sudo apt-get install curl
+curl -s https://install.speedtest.net/app/cli/install.deb.sh | sudo bash
+sudo apt-get install speedtest
 ```
 
-The amount of flows are almost equal to the maximum allowed by platform.
+### spoke1
+```
+   Speedtest by Ookla
 
-![output](supplementals/img/nginx.png)
+     Server: IP Pathways, LLC - Urbandale, IA (id = 11902)
+        ISP: Microsoft Corporation
+    Latency:    24.12 ms   (0.23 ms jitter)
+   Download:  8186.40 Mbps (data used: 9.9 GB )
+     Upload:  3664.42 Mbps (data used: 3.3 GB )
+Packet Loss:     0.0%
+ Result URL: https://www.speedtest.net/result/c/13126a26-08e2-4ecb-99eb-2897d90c2743
+```
+
+### spoke2
+```
+   Speedtest by Ookla
+
+     Server: IP Pathways, LLC - Urbandale, IA (id = 11902)
+        ISP: Microsoft Corporation
+    Latency:    20.94 ms   (0.13 ms jitter)
+   Download:  7349.91 Mbps (data used: 11.5 GB )
+     Upload:  3145.44 Mbps (data used: 5.1 GB )
+Packet Loss:     0.0%
+ Result URL: https://www.speedtest.net/result/c/3ee296b9-71ec-4e71-8f1c-4e0f5c0d1045
+```
+### hub
+```
+   Speedtest by Ookla
+
+     Server: ICS Advanced Technologies - Ames, IA (id = 37733)
+        ISP: Microsoft Corporation
+    Latency:    23.65 ms   (0.25 ms jitter)
+   Download:  5829.51 Mbps (data used: 9.9 GB )
+     Upload:  3347.37 Mbps (data used: 3.3 GB )
+Packet Loss:     0.0%
+ Result URL: https://www.speedtest.net/result/c/da35660c-7ae1-4b81-aded-41aefc8370fe
+```
+
+## iperf3 spoke to spoke  - Azure Firewall Premium , AFWEnableAccelnet = False 
+
+Install : sudo apt-get install iperf3 -y
+
+### iperf3 spoke1 to spoke2
+
+One Flow
+```
+azureadmin@spoke1-vm:~$ iperf3 -c 10.1.0.4
+Connecting to host 10.1.0.4, port 5201
+[  4] local 10.2.0.4 port 45070 connected to 10.1.0.4 port 5201
+  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bandwidth       Retr
+[  4]   0.00-10.00  sec  2.30 GBytes  1.98 Gbits/sec  385             sender
+[  4]   0.00-10.00  sec  2.30 GBytes  1.97 Gbits/sec                  receiver
+```
+
+64 parallel flows (-P64):
+```
+
+[SUM]   0.00-10.00  sec  6.50 GBytes  5.58 Gbits/sec    6             sender
+[SUM]   0.00-10.00  sec  6.44 GBytes  5.53 Gbits/sec                  receiver
+
+```
+
+### iperf3 spoke1 to hub (bypassing firewall)
+
+```
+azureadmin@spoke1-vm:~$ iperf3 -c 10.0.1.4
+Connecting to host 10.0.1.4, port 5201
+[  4] local 10.2.0.4 port 53928 connected to 10.0.1.4 port 5201
+[ ID] Interval           Transfer     Bandwidth       Retr  Cwnd   
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bandwidth       Retr
+[  4]   0.00-10.00  sec  2.66 GBytes  2.29 Gbits/sec  187             sender
+[  4]   0.00-10.00  sec  2.66 GBytes  2.28 Gbits/sec                  receiver
+
+iperf Done.
+
+-P64:
+
+[SUM]   0.00-10.00  sec  6.51 GBytes  5.60 Gbits/sec    0             sender
+[SUM]   0.00-10.00  sec  6.45 GBytes  5.54 Gbits/sec                  receiver
+
+```
+
+### nc spoke1 to spoke2
+```
+azureadmin@spoke1-vm:~$ dd if=/dev/zero bs=1M count=10240 | nc -n 10.1.0.4 1234510240+0 records in
+10240+0 records out
+10737418240 bytes (11 GB, 10 GiB) copied, 41.6609 s, 258 MB/s
+
+azureadmin@spoke2-vm:~$ nc -l -n 12345 > /dev/null
+
+```
+## vxlan
+
+Lets combine multiple flows by wrapping them under Vxlan encapsulation:
+
+```
+# spoke1
+ip link add vxlan1 type vxlan id 1 remote 10.1.0.4 dstport 4789 dev eth0
+ip link set vxlan1 up
+ip addr add 10.77.0.1/30 dev vxlan1
+
+# spoke2
+
+ip link add vxlan1 type vxlan id 1 remote 10.2.0.4 dstport 4789 dev eth0
+ip link set vxlan1 up
+ip addr add 10.77.0.2/30 dev vxlan1
+```
+
+```
+# D4_v2 with AN
+
+root@spoke1-vm:~# iperf3 -P 64 -c 10.77.0.2
+[SUM]   0.00-10.00  sec  2.89 GBytes  2.48 Gbits/sec  214             sender
+[SUM]   0.00-10.00  sec  2.77 GBytes  2.38 Gbits/sec                  receiver
+
+root@spoke1-vm:~# iperf3 -P 128 -c 10.77.0.2
+[SUM]   0.00-10.00  sec  2.92 GBytes  2.51 Gbits/sec  1144             sender
+[SUM]   0.00-10.00  sec  2.78 GBytes  2.39 Gbits/sec                  receiver
+```
+
+``` 
+# D5_v2 with AN
+[SUM]   0.00-10.00  sec  2.17 GBytes  1.87 Gbits/sec  500             sender
+[SUM]   0.00-10.00  sec  2.03 GBytes  1.74 Gbits/sec                  receiver
+
+[SUM]   0.00-10.00  sec  2.26 GBytes  1.94 Gbits/sec  1814             sender
+[SUM]   0.00-10.00  sec  2.13 GBytes  1.83 Gbits/sec                  receiver
+```
+
+## Register AFWEnableAccelnet feature
+
+```
+Select-AzSubscription -Subscription ACAI_Network_Internal_1
+
+Register-AzProviderFeature -Featurename AFWEnableAccelnet  -ProviderNamespace Microsoft.Network
+
+PS C:\Users\ayerofyeyev> Get-AzProviderFeature -ProviderNamespace Microsoft.Network -FeatureName AFWEnableAccelnet
+
+FeatureName       ProviderName      RegistrationState
+-----------       ------------      -----------------
+AFWEnableAccelnet Microsoft.Network Registered
+
+```
+
+Re-testing
+
+```
+# D5_v2 with AN
+
+[SUM]   0.00-10.00  sec  2.17 GBytes  1.86 Gbits/sec  962             sender
+[SUM]   0.00-10.00  sec  2.02 GBytes  1.74 Gbits/sec                  receiver
+
+[SUM]   0.00-10.00  sec  2.17 GBytes  1.86 Gbits/sec  962             sender
+[SUM]   0.00-10.00  sec  2.02 GBytes  1.74 Gbits/sec                  receiver
+
+[SUM]   0.00-10.00  sec  2.17 GBytes  1.86 Gbits/sec  962             sender
+[SUM]   0.00-10.00  sec  2.02 GBytes  1.74 Gbits/sec                  receiver
+
+# D4_v2 with AN
+
+[SUM]   0.00-10.00  sec  2.57 GBytes  2.21 Gbits/sec  718             sender
+[SUM]   0.00-10.00  sec  2.45 GBytes  2.11 Gbits/sec                  receiver
+
+[SUM]   0.00-10.00  sec  2.68 GBytes  2.31 Gbits/sec  3735             sender
+[SUM]   0.00-10.00  sec  2.57 GBytes  2.21 Gbits/sec                  receiver
+
+
+```
+
+As a contrast throughput between hub and spoke directly
+
+```
+# spoke1
+ip link add vxlan2 type vxlan id 2 remote 10.0.1.4 dstport 4789 dev eth0
+ip link set vxlan2 up
+ip addr add 10.78.0.1/30 dev vxlan2
+
+# hub
+
+ip link add vxlan2 type vxlan id 2 remote 10.2.0.4 dstport 4789 dev eth0
+ip link set vxlan2 up
+ip addr add 10.78.0.2/30 dev vxlan2
+
+on DS4_v2 spoke to hub , bypassing firewall
+
+[SUM]   0.00-10.00  sec  6.52 GBytes  5.60 Gbits/sec    0             sender
+[SUM]   0.00-10.00  sec  6.44 GBytes  5.53 Gbits/sec                  receiver
+
+DS5_v2 spoke1 to spoke2
+
+[SUM]   0.00-10.00  sec  3.06 GBytes  2.63 Gbits/sec  1326             sender
+[SUM]   0.00-10.00  sec  2.93 GBytes  2.51 Gbits/sec                  receiver
+
+```

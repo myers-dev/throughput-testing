@@ -37,22 +37,16 @@ variable "custom_rules" {
   default     = []
 }
 
-
 variable "vnets" {
-  description = "List of Vnets names"
-  type = list(object({
-    name                                           = string
-    address_space                                  = list(string)
-    subnet_names                                   = list(string)
-    subnet_prefixes                                = list(string)
-    enforce_private_link_endpoint_network_policies = map(any)
-    enforce_private_link_service_network_policies  = map(any)
-  }))
-  default = []
-}
-
-variable "pa_scale" {
-  description = "Numbers of NVAs"
-  type        = number
-  default     = 1
+    description = "List of Vnets names"  
+    type = map(object(    
+    {     
+      address_space                                  = list(string)
+      subnet_names                                   = list(string)
+      subnet_prefixes                                = list(string)
+      enforce_private_link_endpoint_network_policies = map(any)
+      enforce_private_link_service_network_policies  = map(any)
+    }
+  ))
+  default = {}
 }
