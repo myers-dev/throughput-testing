@@ -2,17 +2,16 @@
 
 ## Overview
 
-The following topology used for the throughput testing. Classical hub-and-spoke topology with Azure Firewall Premium , deployed in the hub. 
+The topology for the throughput testing is shown below. This is a classic hub-and-spoke topology with a deployment of Azure Firewall Premium in the hub. 
+Deployment code ( terraform ) is in [this](infrastructure/) folder.
 
 ![Topology](supplementals/img/Topology0.png)
 
-During testing two VM sizes were used : DS4_v2 and DS5_v2 which, should provide 6 and 12Gbps of network perormance.
-
-https://docs.microsoft.com/en-us/azure/virtual-machines/dv2-dsv2-series
+There were two VM sizes tested: DS4_v2 and DS5_v2, which offer [performance](https://docs.microsoft.com/en-us/azure/virtual-machines/dv2-dsv2-series) of 6 and 12Gbps respectively.
 
 ## Verification
 
-Verifying that internet connectivity is in-fact thought the firewall
+Verifying that internet connectivity is in-fact thought the firewall. ( Force tunneling ). Public IP of the firewall used for outbound communication.
 
 ```
 az network firewall show --name AZFWP --resource-group AZFP --query ipConfigurations[].publicIpAddress[].id
@@ -81,9 +80,19 @@ Packet Loss:     0.0%
  Result URL: https://www.speedtest.net/result/c/da35660c-7ae1-4b81-aded-41aefc8370fe
 ```
 
-## iperf3 spoke to spoke  - Azure Firewall Premium , AFWEnableAccelnet = False 
+## nc spoke1 to spoke2 
 
-Install : sudo apt-get install iperf3 -y
+Due to the buffers allocation nc is not suitable for further testings.
+```
+azureadmin@spoke1-vm:~$ dd if=/dev/zero bs=1M count=10240 | nc -n 10.1.0.4 1234510240+0 records in
+10240+0 records out
+10737418240 bytes (11 GB, 10 GiB) copied, 41.6609 s, 258 MB/s
+
+azureadmin@spoke2-vm:~$ nc -l -n 12345 > /dev/null
+
+```
+
+## iperf3 tests  - Azure Firewall Premium , AFWEnableAccelnet = False 
 
 ### iperf3 spoke1 to spoke2
 
@@ -109,6 +118,7 @@ Connecting to host 10.1.0.4, port 5201
 
 ### iperf3 spoke1 to hub (bypassing firewall)
 
+One Flow
 ```
 azureadmin@spoke1-vm:~$ iperf3 -c 10.0.1.4
 Connecting to host 10.0.1.4, port 5201
@@ -120,26 +130,16 @@ Connecting to host 10.0.1.4, port 5201
 [  4]   0.00-10.00  sec  2.66 GBytes  2.28 Gbits/sec                  receiver
 
 iperf Done.
+```
+64 parallel flows (-P64):
 
--P64:
-
+```
 [SUM]   0.00-10.00  sec  6.51 GBytes  5.60 Gbits/sec    0             sender
 [SUM]   0.00-10.00  sec  6.45 GBytes  5.54 Gbits/sec                  receiver
-
 ```
+## Combining flows with vxlan encapsulation
 
-### nc spoke1 to spoke2
-```
-azureadmin@spoke1-vm:~$ dd if=/dev/zero bs=1M count=10240 | nc -n 10.1.0.4 1234510240+0 records in
-10240+0 records out
-10737418240 bytes (11 GB, 10 GiB) copied, 41.6609 s, 258 MB/s
-
-azureadmin@spoke2-vm:~$ nc -l -n 12345 > /dev/null
-
-```
-## vxlan
-
-Lets combine multiple flows by wrapping them under Vxlan encapsulation:
+The best way to combine multiple flows is to wrap them with Vxlan encapsulation: (IPIP and GRE are not permitted in Azure)
 
 ```
 # spoke1
@@ -190,10 +190,10 @@ AFWEnableAccelnet Microsoft.Network Registered
 
 ```
 
-Re-testing
+Re-testing with VXLAN encapsulation. Spoke to Spoke :
 
 ```
-# D5_v2 with AN
+# DS5_v2 with AN
 
 [SUM]   0.00-10.00  sec  2.17 GBytes  1.86 Gbits/sec  962             sender
 [SUM]   0.00-10.00  sec  2.02 GBytes  1.74 Gbits/sec                  receiver
@@ -204,7 +204,7 @@ Re-testing
 [SUM]   0.00-10.00  sec  2.17 GBytes  1.86 Gbits/sec  962             sender
 [SUM]   0.00-10.00  sec  2.02 GBytes  1.74 Gbits/sec                  receiver
 
-# D4_v2 with AN
+# DS4_v2 with AN
 
 [SUM]   0.00-10.00  sec  2.57 GBytes  2.21 Gbits/sec  718             sender
 [SUM]   0.00-10.00  sec  2.45 GBytes  2.11 Gbits/sec                  receiver
@@ -213,9 +213,15 @@ Re-testing
 [SUM]   0.00-10.00  sec  2.57 GBytes  2.21 Gbits/sec                  receiver
 
 
+
 ```
 
-As a contrast throughput between hub and spoke directly
+Throughput between hub and spoke directly (bypassing Firewall) over VXLAN.
+
+
+![spoke to hub](supplementals/img/spoke-to-hub.png)
+
+Configuration
 
 ```
 # spoke1
@@ -228,20 +234,14 @@ ip addr add 10.78.0.1/30 dev vxlan2
 ip link add vxlan2 type vxlan id 2 remote 10.2.0.4 dstport 4789 dev eth0
 ip link set vxlan2 up
 ip addr add 10.78.0.2/30 dev vxlan2
+```
 
+Results
+
+```
 on DS4_v2 spoke to hub , bypassing firewall . vxlan 1 to vxlan 2 , 64 flows
 
 [SUM]   0.00-10.00  sec  6.52 GBytes  5.60 Gbits/sec    0             sender
 [SUM]   0.00-10.00  sec  6.44 GBytes  5.53 Gbits/sec                  receiver
-
-DS5_v2 spoke1 to spoke2 vxlan1 to vxlan1 / 64 flows
-
-[SUM]   0.00-10.00  sec  3.06 GBytes  2.63 Gbits/sec  1326             sender
-[SUM]   0.00-10.00  sec  2.93 GBytes  2.51 Gbits/sec                  receiver
-
-DS5_v2 spoke to spoke2 eth0 to eth0 / 64 flows
-
-[SUM]   0.00-10.00  sec  5.54 GBytes  4.76 Gbits/sec  10706             sender
-[SUM]   0.00-10.00  sec  5.46 GBytes  4.69 Gbits/sec                  receiver
 
 ```
