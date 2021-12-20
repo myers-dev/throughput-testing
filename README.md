@@ -182,7 +182,7 @@ Select-AzSubscription -Subscription ACAI_Network_Internal_1
 
 Register-AzProviderFeature -Featurename AFWEnableAccelnet  -ProviderNamespace Microsoft.Network
 
-PS C:\Users\ayerofyeyev> Get-AzProviderFeature -ProviderNamespace Microsoft.Network -FeatureName AFWEnableAccelnet
+PS C:\Users> Get-AzProviderFeature -ProviderNamespace Microsoft.Network -FeatureName AFWEnableAccelnet
 
 FeatureName       ProviderName      RegistrationState
 -----------       ------------      -----------------
