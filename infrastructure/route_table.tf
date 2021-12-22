@@ -23,7 +23,7 @@ resource "azurerm_route_table" "RT" {
 
   route {
     name           = "custom2"
-    address_prefix = "68.198.24.244/32"
+    address_prefix = "68.198.24.171/32"
     next_hop_type  = "Internet"
   }
 

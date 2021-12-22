@@ -112,22 +112,27 @@ Re-testing with VXLAN encapsulation. Spoke to Spoke :
 ```
 # spoke to spoke over VXLAN : 64 flows DS5_v2 with AN
 
-[SUM]   0.00-10.00  sec  2.17 GBytes  1.86 Gbits/sec  962             sender
-[SUM]   0.00-10.00  sec  2.02 GBytes  1.74 Gbits/sec                  receiver
+[SUM]   0.00-10.00  sec  6.07 GBytes  5.21 Gbits/sec  2868             sender
+[SUM]   0.00-10.00  sec  5.94 GBytes  5.10 Gbits/sec                  receiver
 
-[SUM]   0.00-10.00  sec  2.17 GBytes  1.86 Gbits/sec  962             sender
-[SUM]   0.00-10.00  sec  2.02 GBytes  1.74 Gbits/sec                  receiver
+[SUM]   0.00-10.00  sec  5.70 GBytes  4.90 Gbits/sec  496             sender
+[SUM]   0.00-10.00  sec  5.60 GBytes  4.81 Gbits/sec                  receiver
 
-[SUM]   0.00-10.00  sec  2.17 GBytes  1.86 Gbits/sec  962             sender
-[SUM]   0.00-10.00  sec  2.02 GBytes  1.74 Gbits/sec                  receiver
+[SUM]   0.00-10.00  sec  5.39 GBytes  4.63 Gbits/sec   38             sender
+[SUM]   0.00-10.00  sec  5.30 GBytes  4.55 Gbits/sec                  receiver
+
 
 # spoke to spoke over VXLAN : 64 flows DS4_v2 with AN
 
-[SUM]   0.00-10.00  sec  2.57 GBytes  2.21 Gbits/sec  718             sender
-[SUM]   0.00-10.00  sec  2.45 GBytes  2.11 Gbits/sec                  receiver
+[SUM]   0.00-10.00  sec  5.70 GBytes  4.90 Gbits/sec  496             sender
+[SUM]   0.00-10.00  sec  5.60 GBytes  4.81 Gbits/sec                  receiver
 
-[SUM]   0.00-10.00  sec  2.68 GBytes  2.31 Gbits/sec  3735             sender
-[SUM]   0.00-10.00  sec  2.57 GBytes  2.21 Gbits/sec                  receiver
+[SUM]   0.00-10.00  sec  6.64 GBytes  5.71 Gbits/sec  4840             sender
+[SUM]   0.00-10.00  sec  6.61 GBytes  5.68 Gbits/sec                  receiver
+
+[SUM]   0.00-10.00  sec  6.64 GBytes  5.71 Gbits/sec  4840             sender
+[SUM]   0.00-10.00  sec  6.61 GBytes  5.68 Gbits/sec                  receiver
+
 
 ```
 
@@ -160,3 +165,144 @@ on DS4_v2 with AN spoke to hub , bypassing firewall . vxlan 1 to vxlan 2 , 64 fl
 [SUM]   0.00-10.00  sec  6.44 GBytes  5.53 Gbits/sec                  receiver
 
 ```
+
+## bigger size VM 
+
+| Test Case  | VM size | Src | Dst | Encap | Proto | Flows | Performance | Note |
+|-----------|---------|--------|-------------|---------------|----------|       :-:       |     :-:     |  :-: |
+| 1. One flow iperf3 spoke to spoke | Standard_D48_v3 [24 Mbps](https://docs.microsoft.com/en-us/azure/virtual-machines/dv3-dsv3-series) | spoke1 (10.2.0.4) | spoke2 (10.1.0.4) | native | iperf3 | 1 | 9.33 Gbits/sec | [linky](#test-case-1---iperf3-one-flow)
+| 2. 64 flows iperf3 spoke to spoke | Standard_D48_v3 [24 Mbps](https://docs.microsoft.com/en-us/azure/virtual-machines/dv3-dsv3-series) | spoke1 (10.2.0.4) | spoke2 (10.1.0.4) | native | iperf3 | 64 | 13.9 - 9.55 Gbit/sec| [linky](#test-case-2---64-flows-iperf3-spoke-to-spoke)
+| 3. One flow iperf3 spoke to spoke encapsulated to VXLAN | Standard_D48_v3 [24 Mbps](https://docs.microsoft.com/en-us/azure/virtual-machines/dv3-dsv3-series) | spoke1 (10.77.0.1) | spoke2 (10.77.0.2) | VXLAN | iperf3 | 1 | 1.33 Gbits/sec | [linky](#test-case-3---one-flow-spoke-to-spoke-iperf3-encapsulated-to-vxlan)
+| 4. 64 flows iperf3 spoke to spoke encapsulated to VXLAN | Standard_D48_v3 [24 Mbps](https://docs.microsoft.com/en-us/azure/virtual-machines/dv3-dsv3-series) | spoke1 (10.77.0.1) | spoke2 (10.77.0.2) | VXLAN | iperf3 | 64 | 11.6 Gbits/sec | [linky](#test-case-4---64-flows-spoke-to-spoke-iperf3-encapsulated-to-vxlan)
+| 5. One flow ftp spoke to spoke | Standard_D48_v3 [24 Mbps](https://docs.microsoft.com/en-us/azure/virtual-machines/dv3-dsv3-series) | spoke1 (10.2.0.4) | spoke2 (10.1.0.4) | native | ftp | 1 | 310.38 MB/s = 2480 Mbps | [linky](#test-case-5---one-flow-spoke-to-spoke-ftp)
+| 6. 64 flows lftp spoke to spoke encapsulated to VXLAN | Standard_D48_v3 [24 Mbps](https://docs.microsoft.com/en-us/azure/virtual-machines/dv3-dsv3-series) | spoke1 (10.77.0.1) | spoke2 (10.77.0.2) | VXLAN | lftp | 64 | 300 MiB/sec = 2516 Mbps| [linky](#test-case-6---64-flows-spoke-to-spoke-lftp-encapsulated-to-vxlan)
+### Test case 1 - One flow iperf3 spoke to spoke
+
+spoke1 
+```
+iperf3 -c 10.1.0.4
+
+[ ID] Interval           Transfer     Bandwidth       Retr
+[  4]   0.00-10.00  sec  10.9 GBytes  9.33 Gbits/sec  1208             sender
+[  4]   0.00-10.00  sec  10.9 GBytes  9.33 Gbits/sec                  receiver
+
+[  4]   0.00-10.00  sec  11.0 GBytes  9.42 Gbits/sec  621             sender
+[  4]   0.00-10.00  sec  11.0 GBytes  9.42 Gbits/sec                  receiver
+```
+spoke2 
+```
+iperf3 -s
+```
+
+### Test case 2 - 64 flows iperf3 spoke to spoke
+
+spoke1 
+```
+iperf3 -c 10.1.0.4 -P 64
+
+[SUM]   0.00-10.00  sec  16.2 GBytes  13.9 Gbits/sec  6198             sender
+[SUM]   0.00-10.00  sec  16.1 GBytes  13.8 Gbits/sec                  receiver
+
+[SUM]   0.00-10.00  sec  11.1 GBytes  9.55 Gbits/sec  10512             sender
+[SUM]   0.00-10.00  sec  11.0 GBytes  9.46 Gbits/sec                  receiver
+
+[SUM]   0.00-10.00  sec  11.1 GBytes  9.53 Gbits/sec  17613             sender
+[SUM]   0.00-10.00  sec  11.0 GBytes  9.47 Gbits/sec                  receiver
+
+```
+spoke2 
+```
+iperf3 -s
+```
+
+### Test case 3 - One flow spoke to spoke iperf3 encapsulated to VXLAN
+spoke1 
+```
+ip link add vxlan1 type vxlan id 1 remote 10.1.0.4 dstport 4789 dev eth0
+ip link set vxlan1 up
+ip addr add 10.77.0.1/30 dev vxlan1
+
+iperf3 -c 10.77.0.2
+
+[ ID] Interval           Transfer     Bandwidth       Retr
+[  4]   0.00-10.00  sec  1.25 GBytes  1.08 Gbits/sec   62             sender
+[  4]   0.00-10.00  sec  1.25 GBytes  1.08 Gbits/sec                  receiver
+
+[ ID] Interval           Transfer     Bandwidth       Retr
+[  4]   0.00-10.00  sec  1.55 GBytes  1.33 Gbits/sec   90             sender
+[  4]   0.00-10.00  sec  1.55 GBytes  1.33 Gbits/sec                  receiver
+```
+
+
+spoke2
+```
+ip link add vxlan1 type vxlan id 1 remote 10.2.0.4 dstport 4789 dev eth0
+ip link set vxlan1 up
+ip addr add 10.77.0.2/30 dev vxlan1
+
+iperf3 -s -i vxlan1
+```
+
+### Test case 4 - 64 flows spoke to spoke iperf3 encapsulated to VXLAN
+spoke1 
+```
+ip link add vxlan1 type vxlan id 1 remote 10.1.0.4 dstport 4789 dev eth0
+ip link set vxlan1 up
+ip addr add 10.77.0.1/30 dev vxlan1
+
+iperf3 -c 10.77.0.2 -P64
+
+[SUM]   0.00-10.04  sec  11.0 GBytes  9.38 Gbits/sec  5267             sender
+[SUM]   0.00-10.04  sec  10.9 GBytes  9.35 Gbits/sec                  receiver
+
+[SUM]   0.00-10.00  sec  8.25 GBytes  7.08 Gbits/sec  1747             sender
+[SUM]   0.00-10.00  sec  8.25 GBytes  7.08 Gbits/sec                  receiver
+
+[SUM]   0.00-10.03  sec  13.5 GBytes  11.6 Gbits/sec  4488             sender
+[SUM]   0.00-10.03  sec  13.3 GBytes  11.4 Gbits/sec                  receiver
+```
+
+spoke2
+```
+ip link add vxlan1 type vxlan id 1 remote 10.2.0.4 dstport 4789 dev eth0
+ip link set vxlan1 up
+ip addr add 10.77.0.2/30 dev vxlan1
+
+iperf3 -s -i vxlan1
+```
+
+### Test case 5 - One flow spoke to spoke ftp 
+spoke1
+```
+apt-get install ncftp
+
+ncftp / > get 10gb-file
+10gb-file:                                               9.31 GB  103.35 MB/s 
+ncftp / > get 10gb-file
+10gb-file:                                               9.31 GB  310.38 MB/s
+```
+spoke2
+```
+apt-get install proftpd
+# enable anonymous access ( /etc/proftpd/proftpd.conf )
+cd /srv/ftp 
+dd if=/dev/urandom of=10gb-file bs=1000000000 count=10 iflag=fullblock # takes about 2-3 min
+#    root@spoke2-vm:/srv/ftp# ls -lah
+#    total 9.4G
+#    drwxr-xr-x 2 ftp  nogroup 4.0K Dec 22 14:04 .
+#    drwxr-xr-x 3 root root    4.0K Dec 22 13:50 ..
+#    -rw-r--r-- 1 root root    9.4G Dec 22 14:08 10gb-file
+#    -rw-r--r-- 1 root root     170 Mar 12  2018 welcome.msg
+```
+
+### Test case 6 - 64 flows spoke to spoke lftp encapsulated to VXLAN
+
+spoke1
+```
+lftp -e 'pget -n 64 ftp://10.77.0.2/10gb-file;quit'
+
+10000000000 bytes transferred in 31 seconds (305.19 MiB/s)
+
+```
+
+spoke2

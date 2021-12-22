@@ -31,7 +31,7 @@ custom_rules = [
     protocol               = "tcp"
     source_port_range      = "*"
     destination_port_range = "22,80,443"
-    source_address_prefix  = "68.198.24.244/32"
+    source_address_prefix  = "68.198.24.171/32"
     description            = "description-myssh"
   },
 ]
