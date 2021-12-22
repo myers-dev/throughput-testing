@@ -176,6 +176,11 @@ on DS4_v2 with AN spoke to hub , bypassing firewall . vxlan 1 to vxlan 2 , 64 fl
 | 4. 64 flows iperf3 spoke to spoke encapsulated to VXLAN | Standard_D48_v3 [24 Mbps](https://docs.microsoft.com/en-us/azure/virtual-machines/dv3-dsv3-series) | spoke1 (10.77.0.1) | spoke2 (10.77.0.2) | VXLAN | iperf3 | 64 | 11.6 Gbits/sec | [linky](#test-case-4---64-flows-spoke-to-spoke-iperf3-encapsulated-to-vxlan)
 | 5. One flow ftp spoke to spoke | Standard_D48_v3 [24 Mbps](https://docs.microsoft.com/en-us/azure/virtual-machines/dv3-dsv3-series) | spoke1 (10.2.0.4) | spoke2 (10.1.0.4) | native | ftp | 1 | 310.38 MB/s = 2480 Mbps | [linky](#test-case-5---one-flow-spoke-to-spoke-ftp)
 | 6. 64 flows lftp spoke to spoke encapsulated to VXLAN | Standard_D48_v3 [24 Mbps](https://docs.microsoft.com/en-us/azure/virtual-machines/dv3-dsv3-series) | spoke1 (10.77.0.1) | spoke2 (10.77.0.2) | VXLAN | lftp | 64 | 300 MiB/sec = 2516 Mbps| [linky](#test-case-6---64-flows-spoke-to-spoke-lftp-encapsulated-to-vxlan)
+| 7. One flow iperf3 spoke to spoke | Standard_DS5_v2 [12 Mbps](https://docs.microsoft.com/en-us/azure/virtual-machines/dv2-dsv2-series) | spoke1 (10.2.0.4) | spoke2 (10.1.0.4) | native | iperf3 | 1 | 9.42 Gbps/s | [linky](#test-case-7-one-flow-iperf3-spoke-to-spoke)
+| 8. 64 flows iperf3 spoke to spoke | Standard_DS5_v2 [12 Mbps](https://docs.microsoft.com/en-us/azure/virtual-machines/dv2-dsv2-series) | spoke1 (10.2.0.4) | spoke2 (10.1.0.4) | native | iperf3 | 64 | 10.9 Gbps/s| [linky](#test-case-8-64-flows-iperf3-spoke-to-spoke)
+| 9. One flow iperf3 spoke to spoke encapsulated to VXLAN |Standard_DS5_v2 [12 Mbps](https://docs.microsoft.com/en-us/azure/virtual-machines/dv2-dsv2-series)| spoke1 (10.77.0.1) | spoke2 (10.77.0.2) | VXLAN | iperf3 | 1 | 1.37 Gbps/s | [linky](#test-case-9-one-flow-iperf3-spoke-to-spoke-encapsulated-to-vxlan)
+| 10. 64 flows iperf3 spoke to spoke encapsulated to VXLAN | Standard_DS5_v2 [12 Mbps](https://docs.microsoft.com/en-us/azure/virtual-machines/dv2-dsv2-series) | spoke1 (10.77.0.1) | spoke2 (10.77.0.2) | VXLAN | iperf3 | 64 | 10.7 Gbps/s | [linky](#test-case-10-64-flows-iperf3-spoke-to-spoke-encapsulated-to-vxlan)
+
 ### Test case 1 - One flow iperf3 spoke to spoke
 
 spoke1 
@@ -306,3 +311,38 @@ lftp -e 'pget -n 64 ftp://10.77.0.2/10gb-file;quit'
 ```
 
 spoke2
+
+### Test case 7. One flow iperf3 spoke to spoke 
+```
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bandwidth       Retr
+[  4]   0.00-10.00  sec  10.8 GBytes  9.30 Gbits/sec  2487             sender
+[  4]   0.00-10.00  sec  10.8 GBytes  9.29 Gbits/sec                  receiver
+
+[ ID] Interval           Transfer     Bandwidth       Retr
+[  4]   0.00-10.00  sec  11.0 GBytes  9.42 Gbits/sec  1410             sender
+[  4]   0.00-10.00  sec  11.0 GBytes  9.41 Gbits/sec                  receiver
+```
+### Test case 8. 64 flows iperf3 spoke to spoke 
+
+```
+[SUM]   0.00-10.00  sec  12.7 GBytes  10.9 Gbits/sec  13621             sender
+[SUM]   0.00-10.00  sec  12.6 GBytes  10.9 Gbits/sec                  receiver
+
+[SUM]   0.00-10.00  sec  12.7 GBytes  10.9 Gbits/sec  6427             sender
+[SUM]   0.00-10.00  sec  12.7 GBytes  10.9 Gbits/sec                  receiver
+```
+
+### Test case 9. One flow iperf3 spoke to spoke encapsulated to VXLAN 
+
+[ ID] Interval           Transfer     Bandwidth       Retr
+[  4]   0.00-10.00  sec  1.59 GBytes  1.37 Gbits/sec   84             sender
+[  4]   0.00-10.00  sec  1.59 GBytes  1.37 Gbits/sec                  receiver
+
+[ ID] Interval           Transfer     Bandwidth       Retr
+[  4]   0.00-10.00  sec  1.59 GBytes  1.37 Gbits/sec   84             sender
+[  4]   0.00-10.00  sec  1.59 GBytes  1.37 Gbits/sec                  receiver
+### Test case 10. 64 flows iperf3 spoke to spoke encapsulated to VXLAN 
+
+[SUM]   0.00-10.00  sec  12.5 GBytes  10.7 Gbits/sec  17549             sender
+[SUM]   0.00-10.00  sec  12.4 GBytes  10.6 Gbits/sec                  receiver
