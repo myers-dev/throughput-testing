@@ -166,7 +166,8 @@ on DS4_v2 with AN spoke to hub , bypassing firewall . vxlan 1 to vxlan 2 , 64 fl
 
 ```
 
-## bigger size VM 
+## Test based on Standard_D48_v3
+
 
 | Test Case  | VM size | Src | Dst | Encap | Proto | Flows | Performance | Note |
 |-----------|---------|--------|-------------|---------------|----------|       :-:       |     :-:     |  :-: |
@@ -346,3 +347,59 @@ spoke2
 
 [SUM]   0.00-10.00  sec  12.5 GBytes  10.7 Gbits/sec  17549             sender
 [SUM]   0.00-10.00  sec  12.4 GBytes  10.6 Gbits/sec                  receiver
+
+
+## Combined throughput on max-pre-scaled Firewall Premium. 
+
+The following three methods were used in order to verify the performance of the Firewall Premium prescaling to 20 instances:
+
+1. iperf3 30 sec, short-duration flows in VMSS , combined over 30 instances
+2. iperf3 280 sec , longer-duration flows, with 64x multiplier , combined over 30 instances. Compared with AZFW Throughput Metrics
+3. iperf3 29 min (1740 sec) , jumbo flows, with 64x multiplier , combined over 30 instances. Compared with AZFW Throughput Metrics
+
+All three methods above provide an average 180Gbps performance with unsignificant devaiation. 
+
+Topology below were used for test:
+
+![VMSSTopology](supplementals/img/Topology1.png)
+
+Notes about implementation:
+
+1. Client/Server architecture were used
+2. Clients/Servers were implemented as VMSS
+3. Clients and Servers are NTP-synchronized
+4. Azure Service Bus queue were used for feeding client pool with server IP addresses 
+5. Azure Table Store used for statistics collection
+6. VMSS were built based on [Standard_D4_v4](https://docs.microsoft.com/en-us/azure/virtual-machines/dv4-dsv4-series) ( 4 cores, 10Gbps network performance ) 
+7. 30 instances should be enough to cover potential max of the AZFW ( 20 * 10Gbps < 30 * 10Gbps)
+
+### iperf3 30 sec, short-duration flows in VMSS , combined over 30 instances
+
+[Statistics collected from 30 clients](supplementals/stats/stats-30sec-30instances.xlsx)
+
+Visualization ( aggregate ):
+
+![Visualization](supplementals/stats/stats-30sec-30instances.png)
+
+
+### iperf3 280 sec , longer-duration flows, with 64x multiplier , combined over 30 instances. Compared with AZFW Throughput Metrics
+
+[Statistics collected from 30 clients](supplementals/stats/stats-280sec-30instances.xlsx)
+
+Visualization ( aggregate ), Note the throughput is symmetrical
+
+![Visualization](supplementals/stats/stats-280sec-30instances.png)
+
+Metrics ( AZFW Throughput )
+
+![Metrics](supplementals/stats/metrics-280sec-30instances.png)
+
+### iperf3 29 min (1740 sec) , jumbo flows, with 64x multiplier , combined over 30 instances. Compared with AZFW Throughput Metrics
+
+[Statistics collected from 30 clients](supplementals/stats/stats-1740sec-30instances.xlsx)
+
+Visualization ( aggregate ), Note the throughput is symmetrical
+
+![Visualization](supplementals/stats/stats-1740sec-30instances.png)
+
+![Metrics](supplementals/stats/metrics-1740sec-30instances.png)

@@ -1,6 +1,6 @@
-output "Hub_Linux_public_ip" {
-  value = azurerm_public_ip.pip["AZFPVNET"].ip_address
-}
+# output "Hub_Linux_public_ip" {
+#   value = azurerm_public_ip.pip["AZFPVNET"].ip_address
+# }
 
 output "Spoke1_Linux_public_ip" {
   value = azurerm_public_ip.pip["spoke1"].ip_address

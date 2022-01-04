@@ -1,6 +1,10 @@
 resource "azurerm_network_interface" "nic" {
 
-  for_each = var.vnets
+  for_each = { "spoke1" = var.vnets["spoke1"], 
+               "spoke2" = var.vnets["spoke2"] 
+              }
+  #for_each = {}
+  #for_each = var.vnets
 
   name                = "${each.key}-nic"
   location            = var.location
@@ -17,7 +21,12 @@ resource "azurerm_network_interface" "nic" {
 }
 
 resource "azurerm_public_ip" "pip" {
-  for_each = var.vnets
+
+  for_each = { "spoke1" = var.vnets["spoke1"], 
+              "spoke2" = var.vnets["spoke2"] 
+            }
+  #for_each = {}
+  #for_each = var.vnets
 
   name                = "${each.key}-pip"
   location            = var.location
@@ -30,9 +39,12 @@ resource "azurerm_public_ip" "pip" {
 
 resource "azurerm_storage_account" "boot_diagnostic" {
 
-  for_each = var.vnets
+  for_each = { "spoke1" = var.vnets["spoke1"], 
+               "spoke2" = var.vnets["spoke2"] 
+              }
+  #for_each = var.vnets
 
-  name                = "${random_id.id.hex}stor"
+  name                = "${random_id.id.hex}${each.key}"
   resource_group_name = var.resource_group_name
   location            = var.location
 
@@ -43,12 +55,16 @@ resource "azurerm_storage_account" "boot_diagnostic" {
 }
 resource "azurerm_linux_virtual_machine" "vm" {
 
-  for_each = var.vnets
+  for_each = { "spoke1" = var.vnets["spoke1"], 
+               "spoke2" = var.vnets["spoke2"] 
+              }
+  #for_each = {}
+  #for_each = var.vnets
 
   name                = "${each.key}-vm"
   resource_group_name = var.resource_group_name
   location            = var.location
-  size                = "Standard_DS5_v2" #"Standard_D48_v3" , "Standard_F2" , Standard_DS4_v2 , Standard_DS5_v2 , Standard_DS4_v2
+  size                = "Standard_F2" # "Standard_DS5_v2" #"Standard_D48_v3" , "Standard_F2" , Standard_DS4_v2 , Standard_DS5_v2 , Standard_DS4_v2
   admin_username      = data.azurerm_key_vault_secret.keyvault-username.value
   admin_password      = data.azurerm_key_vault_secret.keyvault-password.value
 
@@ -72,11 +88,14 @@ resource "azurerm_linux_virtual_machine" "vm" {
     storage_account_type = "Standard_LRS"
   }
 
+  provisioner "local-exec" {
+    command = "scp -o StrictHostKeyChecking=no /home/andrew/.ssh/id_rsa azureadmin@${azurerm_public_ip.pip[each.key].ip_address}:.ssh/"
+  }
+
   source_image_reference {
     publisher = "Canonical"
     offer     = "UbuntuServer"
-    sku       = "16.04-LTS"
+    sku       = "18.04-LTS"
     version   = "latest"
   }
 }
-

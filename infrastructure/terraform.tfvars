@@ -11,6 +11,7 @@ lock_level = ""
 
 security_group_name = "nsg"
 
+# update routing !!!
 custom_rules = [
   {
     name                   = "TH1"
@@ -31,7 +32,7 @@ custom_rules = [
     protocol               = "tcp"
     source_port_range      = "*"
     destination_port_range = "22,80,443"
-    source_address_prefix  = "68.198.24.171/32"
+    source_address_prefix  = "24.189.31.156/32"
     description            = "description-myssh"
   },
 ]
@@ -53,7 +54,7 @@ vnets = {
   "spoke1" = {
     address_space   = ["10.2.0.0/16"]
     subnet_names    = ["default"]
-    subnet_prefixes = ["10.2.0.0/24"]
+    subnet_prefixes = ["10.2.0.0/16"]
     enforce_private_link_endpoint_network_policies = {
       default = true # "privateEndpointNetworkPolicies": "Disabled=true Enabled=false"
     }
@@ -64,7 +65,7 @@ vnets = {
   "spoke2" = {
     address_space   = ["10.1.0.0/16"]
     subnet_names    = ["default"]
-    subnet_prefixes = ["10.1.0.0/24"]
+    subnet_prefixes = ["10.1.0.0/16"]
     enforce_private_link_endpoint_network_policies = {
       default = true # "privateEndpointNetworkPolicies": "Disabled=true Enabled=false",
     }
