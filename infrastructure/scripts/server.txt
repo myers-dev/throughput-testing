@@ -1,15 +1,56 @@
 #!/bin/bash
 
+# System Dependencies
 apt-get update -y
+apt-get upgrade -y
 apt-get install iproute2 -y
 apt-get install wrk -y
 apt-get install iperf3 -y
 apt-get install ntp -y
+apt-get install nginx -y
+apt-get install unzip -y
+
+# iperf3 daemon
 iperf3 -s -D
 
+# Disabling default logging for nginx
+sed -i s/access_log/"# access_log"/ /etc/nginx/nginx.conf 
+sed -i s/error_log/"# error_log"/ /etc/nginx/nginx.conf 
+
+# enabling ssl for nginx
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/ssl-cert-snakeoil.key -out /etc/ssl/certs/ssl-cert-snakeoil.pem -subj "/C=US/CN=fwtest"
+
+sed -i "s/\# include snippets\/snakeoil.conf;/  include snippets\/snakeoil.conf;/" /etc/nginx/sites-available/default
+sed -i "s/# listen 443/  listen 443/" /etc/nginx/sites-available/default
+
+# to test : curl -k https://x.x.x.x
+
+# generate random file
+mv /var/www/html/index.nginx-debian.html /var/www/html/index.nginx-debian.html.bac 
+dd if=/dev/urandom  bs=1024 count=1000 | base64 > /var/www/html/index.nginx-debian.html
+
+service nginx restart
+
+# python Dependencies
 sudo apt install python3-pip -y
 pip3 install azure.servicebus
 
+# ethr installation
+wget https://github.com/microsoft/ethr/releases/download/v1.0.0/ethr_linux.zip
+unzip ethr_linux.zip
+chmod +x ethr
+cp ethr /usr/bin
+
+# ntttcp installation 
+cd ~
+git clone https://github.com/Microsoft/ntttcp-for-linux
+cd ntttcp-for-linux/src
+make
+make install
+
+cd ~
+
+# python test suite ( mainly for reporting ip to servicebus)
 cat << EOF>server.py
 from azure.servicebus import ServiceBusClient, ServiceBusMessage
 import socket
@@ -47,4 +88,5 @@ with servicebus_client:
 #print("-----------------------")
 EOF
 
+#Uncomment for traffic generator
 python3 server.py

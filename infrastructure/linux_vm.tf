@@ -1,8 +1,13 @@
+locals {
+  vm_loc = { "spoke1" = var.vnets["spoke1"], 
+               "spoke2" = var.vnets["spoke2"],
+               "AZFPVNET"    = var.vnets["AZFPVNET"] 
+           }
+} 
+
 resource "azurerm_network_interface" "nic" {
 
-  for_each = { "spoke1" = var.vnets["spoke1"], 
-               "spoke2" = var.vnets["spoke2"] 
-              }
+  for_each = local.vm_loc
   #for_each = {}
   #for_each = var.vnets
 
@@ -22,9 +27,7 @@ resource "azurerm_network_interface" "nic" {
 
 resource "azurerm_public_ip" "pip" {
 
-  for_each = { "spoke1" = var.vnets["spoke1"], 
-              "spoke2" = var.vnets["spoke2"] 
-            }
+  for_each = local.vm_loc
   #for_each = {}
   #for_each = var.vnets
 
@@ -39,12 +42,10 @@ resource "azurerm_public_ip" "pip" {
 
 resource "azurerm_storage_account" "boot_diagnostic" {
 
-  for_each = { "spoke1" = var.vnets["spoke1"], 
-               "spoke2" = var.vnets["spoke2"] 
-              }
+  for_each = local.vm_loc
   #for_each = var.vnets
 
-  name                = "${random_id.id.hex}${each.key}"
+  name                = lower("${random_id.id.hex}${each.key}")
   resource_group_name = var.resource_group_name
   location            = var.location
 
@@ -55,11 +56,7 @@ resource "azurerm_storage_account" "boot_diagnostic" {
 }
 resource "azurerm_linux_virtual_machine" "vm" {
 
-  for_each = { "spoke1" = var.vnets["spoke1"], 
-               "spoke2" = var.vnets["spoke2"] 
-              }
-  #for_each = {}
-  #for_each = var.vnets
+  for_each = local.vm_loc
 
   name                = "${each.key}-vm"
   resource_group_name = var.resource_group_name

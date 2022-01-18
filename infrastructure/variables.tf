@@ -31,12 +31,6 @@ variable "security_group_name" {
   default     = "nsg"
 }
 
-variable "custom_rules" {
-  description = "NSG rules applied to subnets"
-  type        = any
-  default     = []
-}
-
 variable "vnets" {
     description = "List of Vnets names"  
     type = map(object(    
@@ -49,4 +43,8 @@ variable "vnets" {
     }
   ))
   default = {}
+}
+
+variable "vmssscale" {
+  description = "Number of instances in VMSS"
 }

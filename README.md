@@ -335,7 +335,7 @@ spoke2
 ```
 
 ### Test case 9. One flow iperf3 spoke to spoke encapsulated to VXLAN 
-
+```
 [ ID] Interval           Transfer     Bandwidth       Retr
 [  4]   0.00-10.00  sec  1.59 GBytes  1.37 Gbits/sec   84             sender
 [  4]   0.00-10.00  sec  1.59 GBytes  1.37 Gbits/sec                  receiver
@@ -347,7 +347,7 @@ spoke2
 
 [SUM]   0.00-10.00  sec  12.5 GBytes  10.7 Gbits/sec  17549             sender
 [SUM]   0.00-10.00  sec  12.4 GBytes  10.6 Gbits/sec                  receiver
-
+```
 
 ## Combined throughput on max-pre-scaled Firewall Premium. 
 
@@ -403,3 +403,53 @@ Visualization ( aggregate ), Note the throughput is symmetrical
 ![Visualization](supplementals/stats/stats-1740sec-30instances.png)
 
 ![Metrics](supplementals/stats/metrics-1740sec-30instances.png)
+
+## Comparison of performance with IDPS (Alert + Deny) vs IDPS off
+
+When Azure Firewall Premium configured with Single Network Policy and IDPS is enabled in Alert and Deny mode it has significant impact on transit traffic performance. 
+
+Here is an example of iperf3 test with 64 flows
+
+| IDPS |# of instances| Iperf3 -P64 |Source/Destination VM size| 
+|------|-------------|--------------------------|--------|
+|Disabled|10|92.1 Gbits/sec|Standard_D4_v4||
+|Alert and Deny|10|8.6G bits/sec|Standard_D4_v4|
+
+![Visualization](supplementals/stats/stats-IDPS-on-off.png)
+
+![Metrics](supplementals/stats/stats-IDPS-on-off-table.png)
+
+## Comparsion of RTT with IDPS ( Alert + Deny ) vs IDPS off
+
+Azure Firewall Premium configured with Single Network Policy and IDPS configured in Alert and Deny mode significantly impacts transit RTT. 
+
+As an example, here is an iperf3 test of 64 flows (combined data). The top graph displays the throughput while the bottom graph displays the RTT data. This is a relative data. 
+
+![Visualization](supplementals/stats/stats-rtt-IDPS-on-off.png)
+
+[Metrics](supplementals/stats/IDPS-network-delay-stats.xlsx)
+
+## RTT measurements in iperf3
+
+As per [esnet/iperf](https://github.com/esnet/iperf/commit/432ef7ebb3abfedcb87b717b251eb72fc1a2d0c3) :
+
+>Retrieve RTT information on platforms supporting it.
+This value is available on the sender side, expressed in
+microseconds.  It's available in the JSON output.
+
+>In the JSON output we also output the maximum observed RTT
+per-stream.  Note that since the observation interval is many times
+the RTT, it's not clear how good this value would be at capturing the
+largest computed RTT value over the lifetime of each stream.
+
+>While here, also determine the maximum observed snd_cwnd value over
+the lifetime of each stream.
+
+>This all works pretty well on Linux, but on FreeBSD (which should
+theoretically be supported) we don't do a good job of supporting the
+tcp_info structure.  We need to make this code a lot more portable,
+rather than just assuming the world of platforms is "Linux"
+vs. "everything else".  Fixing this requires some rearchitecting of
+the way that we retrieve, compute, and print statistics.
+
+RTT returned in [usec](https://github.com/esnet/iperf/blob/332c31ee6512514c216077407a725b5b958b1582/src/tcp_info.c#L168)

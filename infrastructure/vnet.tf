@@ -12,7 +12,19 @@ module "nsg" {
   location            = var.location
   security_group_name = var.security_group_name
 
-  custom_rules = var.custom_rules
+  custom_rules = [
+  {
+    name                   = "R100"
+    priority               = 100
+    direction              = "Inbound"
+    access                 = "Allow"
+    protocol               = "tcp"
+    source_port_range      = "*"
+    destination_port_range = "22,80,443"
+    source_address_prefix  = data.external.my_ip.result.my_ip
+    description            = "MGMT"
+  }
+]
 
   tags = var.tags
 

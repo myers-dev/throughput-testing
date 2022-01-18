@@ -11,32 +11,6 @@ lock_level = ""
 
 security_group_name = "nsg"
 
-# update routing !!!
-custom_rules = [
-  {
-    name                   = "TH1"
-    priority               = 301
-    direction              = "Inbound"
-    access                 = "Allow"
-    protocol               = "tcp"
-    source_port_range      = "*"
-    destination_port_range = "22,80,443"
-    source_address_prefix  = "67.85.24.215/32"
-    description            = "description-myssh"
-  },
-  {
-    name                   = "TH2"
-    priority               = 302
-    direction              = "Inbound"
-    access                 = "Allow"
-    protocol               = "tcp"
-    source_port_range      = "*"
-    destination_port_range = "22,80,443"
-    source_address_prefix  = "24.189.31.156/32"
-    description            = "description-myssh"
-  },
-]
-
 vnets = {
   "AZFPVNET" = {
     address_space   = ["10.0.0.0/16"]
@@ -75,7 +49,7 @@ vnets = {
   }
 }
 
-
+vmssscale = 1
 
 
 

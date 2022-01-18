@@ -1,5 +1,5 @@
 resource "azurerm_servicebus_namespace" "this" {
-  name                = "ttesting"
+  name                = "tt${random_id.id.hex}"
 
   location            = var.location
   resource_group_name = var.resource_group_name

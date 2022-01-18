@@ -2,7 +2,8 @@
 
 resource "azurerm_dev_test_global_vm_shutdown_schedule" "shutdown-linux" {
 
-  for_each = azurerm_linux_virtual_machine.vm
+  #for_each = azurerm_linux_virtual_machine.vm
+  for_each = {}
 
   virtual_machine_id = each.value.id
   location           = var.location
