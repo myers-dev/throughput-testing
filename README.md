@@ -537,68 +537,202 @@ In summary, with IDPS off, the http(s) throughput is proportional to the size of
 
 Additionally, we have tested scenarios where source/destinations are set up on AKS clusters. We also tested the scenario with a standard load balancer in front of the servers. Both of them have not provided any performance benefits, despite rebalancing sources and destinations. 
 
-### IDPS Off, D4_v4, vegeta http , rate 50, 1M reply 120 instances, 5 min. 
+
+### IDPS-Off-D4-v4-vegeta-http-rate-50-1M-reply-120-instances-5-min
 
 Variables:
 ```
 # terraform.tfvars:
-idps = "Off"
+idps = ""
 
 # clients.txt:
-test_type = "vegeta" 
+test_type = "" 
 duration  = 5 # in minutes 
-protocol = "http" # vegeta specific
+protocol = "" # vegeta specific
 
 
 ./manual_vmss_scaling.sh 120 # az cli scaling is much faster than with terraform
 ```
 
-* Throughput : ~54 Gbps
-* Latency : 209.7 ms ( include server processing delay )
+* Throughput :  
+* Latency :   ( include server processing delay )
 
-[Stats](/supplementals/stats/stats-IDPS-Off-D4_v4-vegeta-http-rate-50-1M-reply-120-instances-5-min.csv)
-![Metrics](/supplementals/stats/metrics-IDPS-Off-D4_v4-vegeta-http-rate-50-1M-reply-120-instances-5-min.png)
-![Latency](/supplementals/stats/latency-IDPS-Off-D4_v4-vegeta-http-rate-50-1M-reply-120-instances-5-min.png)
-### IDPS Off, D4_v4, vegeta https , rate 50, 1M reply, 120 instances, 5 min,
+[stats](stats-IDPS-Off-D4-v4-vegeta-http-rate-50-1M-reply-120-instances-5-min.csv)
+![Metrics](/supplementals/stats/metrics-IDPS-Off-D4-v4-vegeta-http-rate-50-1M-reply-120-instances-5-min.png)
+![Latency](/supplementals/stats/latency-IDPS-Off-D4-v4-vegeta-http-rate-50-1M-reply-120-instances-5-min.png)
+### IDPS-Off-D4-v4-vegeta-https-rate-50-1M-reply-120-instances-5-min
 
+Variables:
+```
+# terraform.tfvars:
+idps = ""
 
-![Metrics]()
-![Latency]()
-
-### IDPS Off, D4_v4, iperf3/64 , 120 instances, 10 min,
-
-
-![Metrics]()
-![Latency]()
-
-### IDPS Alert, D4_v4, vegeta http , rate 50, 1M reply, 120 instances, 5 min.
+# clients.txt:
+test_type = "" 
+duration  = 5 # in minutes 
+protocol = "" # vegeta specific
 
 
-![Metrics]()
-![Latency]()
+./manual_vmss_scaling.sh 120 # az cli scaling is much faster than with terraform
+```
 
-### IDPS Alert, D4_v4, vegeta https , rate 50, 1M reply, 120 instances, 5 min.
+* Throughput :
+* Latency :   ( include server processing delay )
+
+[stats](stats-IDPS-Off-D4-v4-vegeta-https-rate-50-1M-reply-120-instances-5-min.csv)
+![Metrics](/supplementals/stats/metrics-IDPS-Off-D4-v4-vegeta-https-rate-50-1M-reply-120-instances-5-min.png)
+![Latency](/supplementals/stats/latency-IDPS-Off-D4-v4-vegeta-https-rate-50-1M-reply-120-instances-5-min.png)
+### IDPS-Off-D4-v4-iperf3-64-120-instances-10-min
+
+Variables:
+```
+# terraform.tfvars:
+idps = ""
+
+# clients.txt:
+test_type = ""
+duration  = 5 # in minutes
+protocol = "" # vegeta specific
 
 
-![Metrics]()
-![Latency]()
-### IDPS Alert, D4_v4, iperf3/64 , 120 instances, 5 min.
+./manual_vmss_scaling.sh 120 # az cli scaling is much faster than with terraform
+```
+
+* Throughput :
+* Latency :   ( include server processing delay )
+
+[stats](stats-IDPS-Off-D4-v4-iperf3-64-120-instances-10-min.csv)
+![Metrics](/supplementals/stats/metrics-IDPS-Off-D4-v4-iperf3-64-120-instances-10-min.png)
+![Latency](/supplementals/stats/latency-IDPS-Off-D4-v4-iperf3-64-120-instances-10-min.png)
+### IDPS-Alert-D4-v4-vegeta-http-rate-50-1M-reply-120-instances-5-min
+
+Variables:
+```
+# terraform.tfvars:
+idps = ""
+
+# clients.txt:
+test_type = ""
+duration  = 5 # in minutes
+protocol = "" # vegeta specific
 
 
-![Metrics]()
-![Latency]()
-### IDPS Alert and Deny, D4_v4, vegeta http, rate 50, 1M reply , 120 instances, 5 min
+./manual_vmss_scaling.sh 120 # az cli scaling is much faster than with terraform
+```
+
+* Throughput :
+* Latency :   ( include server processing delay )
+
+[stats](stats-IDPS-Alert-D4-v4-vegeta-http-rate-50-1M-reply-120-instances-5-min.csv)
+![Metrics](/supplementals/stats/metrics-IDPS-Alert-D4-v4-vegeta-http-rate-50-1M-reply-120-instances-5-min.png)
+![Latency](/supplementals/stats/latency-IDPS-Alert-D4-v4-vegeta-http-rate-50-1M-reply-120-instances-5-min.png)
+### IDPS-Alert-D4-v4-vegeta-https-rate-50-1M-reply-120-instances-5-min
+
+Variables:
+```
+# terraform.tfvars:
+idps = ""
+
+# clients.txt:
+test_type = ""
+duration  = 5 # in minutes
+protocol = "" # vegeta specific
 
 
-![Metrics]()
-![Latency]()
-### IDPS Alert and Deny, D4_v4, vegeta https, rate 50, 1M reply , 120 instances, 5 min
+./manual_vmss_scaling.sh 120 # az cli scaling is much faster than with terraform
+```
+
+* Throughput :
+* Latency :   ( include server processing delay )
+
+[stats](stats-IDPS-Alert-D4-v4-vegeta-https-rate-50-1M-reply-120-instances-5-min.csv)
+![Metrics](/supplementals/stats/metrics-IDPS-Alert-D4-v4-vegeta-https-rate-50-1M-reply-120-instances-5-min.png)
+![Latency](/supplementals/stats/latency-IDPS-Alert-D4-v4-vegeta-https-rate-50-1M-reply-120-instances-5-min.png)
+### IDPS-Alert-D4-v4-iperf3-64-120-instances-5-min
+
+Variables:
+```
+# terraform.tfvars:
+idps = ""
+
+# clients.txt:
+test_type = ""
+duration  = 5 # in minutes
+protocol = "" # vegeta specific
 
 
-![Metrics]()
-![Latency]()
+./manual_vmss_scaling.sh 120 # az cli scaling is much faster than with terraform
+```
 
-### IDPS Alert and Deny, D4_v4, iperf3/64 , 120 instances, 5 min
+* Throughput :
+* Latency :   ( include server processing delay )
 
-![Metrics]()
-![Latency]()
+[stats](stats-IDPS-Alert-D4-v4-iperf3-64-120-instances-5-min.csv)
+![Metrics](/supplementals/stats/metrics-IDPS-Alert-D4-v4-iperf3-64-120-instances-5-min.png)
+![Latency](/supplementals/stats/latency-IDPS-Alert-D4-v4-iperf3-64-120-instances-5-min.png)
+### IDPS-Alert-and-Deny-D4-v4-vegeta-http-rate-50-1M-reply-120-instances-5-min
+
+Variables:
+```
+# terraform.tfvars:
+idps = ""
+
+# clients.txt:
+test_type = ""
+duration  = 5 # in minutes
+protocol = "" # vegeta specific
+
+
+./manual_vmss_scaling.sh 120 # az cli scaling is much faster than with terraform
+```
+
+* Throughput :
+* Latency :   ( include server processing delay )
+
+[stats](stats-IDPS-Alert-and-Deny-D4-v4-vegeta-http-rate-50-1M-reply-120-instances-5-min.csv)
+![Metrics](/supplementals/stats/metrics-IDPS-Alert-and-Deny-D4-v4-vegeta-http-rate-50-1M-reply-120-instances-5-min.png)
+![Latency](/supplementals/stats/latency-IDPS-Alert-and-Deny-D4-v4-vegeta-http-rate-50-1M-reply-120-instances-5-min.png)
+### IDPS-Alert-and-Deny-D4-v4-vegeta-https-rate-50-1M-reply-120-instances-5-min
+
+Variables:
+```
+# terraform.tfvars:
+idps = ""
+
+# clients.txt:
+test_type = ""
+duration  = 5 # in minutes
+protocol = "" # vegeta specific
+
+
+./manual_vmss_scaling.sh 120 # az cli scaling is much faster than with terraform
+```
+
+* Throughput :
+* Latency :   ( include server processing delay )
+
+[stats](stats-IDPS-Alert-and-Deny-D4-v4-vegeta-https-rate-50-1M-reply-120-instances-5-min.csv)
+![Metrics](/supplementals/stats/metrics-IDPS-Alert-and-Deny-D4-v4-vegeta-https-rate-50-1M-reply-120-instances-5-min.png)
+![Latency](/supplementals/stats/latency-IDPS-Alert-and-Deny-D4-v4-vegeta-https-rate-50-1M-reply-120-instances-5-min.png)
+### IDPS-Alert-and-Deny-D4-v4-iperf3-64-120-instances-5-min
+
+Variables:
+```
+# terraform.tfvars:
+idps = ""
+
+# clients.txt:
+test_type = ""
+duration  = 5 # in minutes
+protocol = "" # vegeta specific
+
+
+./manual_vmss_scaling.sh 120 # az cli scaling is much faster than with terraform
+```
+
+* Throughput :
+* Latency :   ( include server processing delay )
+
+[stats](stats-IDPS-Alert-and-Deny-D4-v4-iperf3-64-120-instances-5-min.csv)
+![Metrics](/supplementals/stats/metrics-IDPS-Alert-and-Deny-D4-v4-iperf3-64-120-instances-5-min.png)
+![Latency](/supplementals/stats/latency-IDPS-Alert-and-Deny-D4-v4-iperf3-64-120-instances-5-min.png)
