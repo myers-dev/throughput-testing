@@ -543,21 +543,21 @@ Additionally, we have tested scenarios where source/destinations are set up on A
 Variables:
 ```
 # terraform.tfvars:
-idps = ""
+idps = "Off"
 
 # clients.txt:
-test_type = "" 
+test_type = "vegeta" 
 duration  = 5 # in minutes 
-protocol = "" # vegeta specific
+protocol = "http" # vegeta specific
 
 
 ./manual_vmss_scaling.sh 120 # az cli scaling is much faster than with terraform
 ```
 
-* Throughput :  
-* Latency :   ( include server processing delay )
-
-[stats](stats-IDPS-Off-D4-v4-vegeta-http-rate-50-1M-reply-120-instances-5-min.csv)
+* Throughput : ~ 54Gbps 
+* Latency mean : 209.7ms  ( include server processing delay )
+  
+[stats](/supplementals/stats/stats-IDPS-Off-D4-v4-vegeta-http-rate-50-1M-reply-120-instances-5-min.csv)
 ![Metrics](/supplementals/stats/metrics-IDPS-Off-D4-v4-vegeta-http-rate-50-1M-reply-120-instances-5-min.png)
 ![Latency](/supplementals/stats/latency-IDPS-Off-D4-v4-vegeta-http-rate-50-1M-reply-120-instances-5-min.png)
 ### IDPS-Off-D4-v4-vegeta-https-rate-50-1M-reply-120-instances-5-min
@@ -565,21 +565,21 @@ protocol = "" # vegeta specific
 Variables:
 ```
 # terraform.tfvars:
-idps = ""
+idps = "Off"
 
 # clients.txt:
-test_type = "" 
-duration  = 5 # in minutes 
-protocol = "" # vegeta specific
+test_type = "vegeta"
+duration  = 5 # in minutes
+protocol = "https" # vegeta specific
 
 
 ./manual_vmss_scaling.sh 120 # az cli scaling is much faster than with terraform
 ```
 
-* Throughput :
-* Latency :   ( include server processing delay )
+* Throughput : 
+* Latency mean : 297.49ms  ( include server processing delay )
 
-[stats](stats-IDPS-Off-D4-v4-vegeta-https-rate-50-1M-reply-120-instances-5-min.csv)
+[stats](/supplementals/stats/stats-IDPS-Off-D4-v4-vegeta-https-rate-50-1M-reply-120-instances-5-min.csv)
 ![Metrics](/supplementals/stats/metrics-IDPS-Off-D4-v4-vegeta-https-rate-50-1M-reply-120-instances-5-min.png)
 ![Latency](/supplementals/stats/latency-IDPS-Off-D4-v4-vegeta-https-rate-50-1M-reply-120-instances-5-min.png)
 ### IDPS-Off-D4-v4-iperf3-64-120-instances-10-min
@@ -598,10 +598,10 @@ protocol = "" # vegeta specific
 ./manual_vmss_scaling.sh 120 # az cli scaling is much faster than with terraform
 ```
 
-* Throughput :
-* Latency :   ( include server processing delay )
+* Throughput ~52Gbps:
+* Latency mean :   ( include server processing delay )
 
-[stats](stats-IDPS-Off-D4-v4-iperf3-64-120-instances-10-min.csv)
+[stats](/supplementals/stats/stats-IDPS-Off-D4-v4-iperf3-64-120-instances-10-min.csv)
 ![Metrics](/supplementals/stats/metrics-IDPS-Off-D4-v4-iperf3-64-120-instances-10-min.png)
 ![Latency](/supplementals/stats/latency-IDPS-Off-D4-v4-iperf3-64-120-instances-10-min.png)
 ### IDPS-Alert-D4-v4-vegeta-http-rate-50-1M-reply-120-instances-5-min
@@ -621,9 +621,9 @@ protocol = "" # vegeta specific
 ```
 
 * Throughput :
-* Latency :   ( include server processing delay )
+* Latency mean :   ( include server processing delay )
 
-[stats](stats-IDPS-Alert-D4-v4-vegeta-http-rate-50-1M-reply-120-instances-5-min.csv)
+[stats](/supplementals/stats/stats-IDPS-Alert-D4-v4-vegeta-http-rate-50-1M-reply-120-instances-5-min.csv)
 ![Metrics](/supplementals/stats/metrics-IDPS-Alert-D4-v4-vegeta-http-rate-50-1M-reply-120-instances-5-min.png)
 ![Latency](/supplementals/stats/latency-IDPS-Alert-D4-v4-vegeta-http-rate-50-1M-reply-120-instances-5-min.png)
 ### IDPS-Alert-D4-v4-vegeta-https-rate-50-1M-reply-120-instances-5-min
@@ -643,9 +643,9 @@ protocol = "" # vegeta specific
 ```
 
 * Throughput :
-* Latency :   ( include server processing delay )
+* Latency mean :   ( include server processing delay )
 
-[stats](stats-IDPS-Alert-D4-v4-vegeta-https-rate-50-1M-reply-120-instances-5-min.csv)
+[stats](/supplementals/stats/stats-IDPS-Alert-D4-v4-vegeta-https-rate-50-1M-reply-120-instances-5-min.csv)
 ![Metrics](/supplementals/stats/metrics-IDPS-Alert-D4-v4-vegeta-https-rate-50-1M-reply-120-instances-5-min.png)
 ![Latency](/supplementals/stats/latency-IDPS-Alert-D4-v4-vegeta-https-rate-50-1M-reply-120-instances-5-min.png)
 ### IDPS-Alert-D4-v4-iperf3-64-120-instances-5-min
@@ -665,9 +665,9 @@ protocol = "" # vegeta specific
 ```
 
 * Throughput :
-* Latency :   ( include server processing delay )
+* Latency mean :   ( include server processing delay )
 
-[stats](stats-IDPS-Alert-D4-v4-iperf3-64-120-instances-5-min.csv)
+[stats](/supplementals/stats/stats-IDPS-Alert-D4-v4-iperf3-64-120-instances-5-min.csv)
 ![Metrics](/supplementals/stats/metrics-IDPS-Alert-D4-v4-iperf3-64-120-instances-5-min.png)
 ![Latency](/supplementals/stats/latency-IDPS-Alert-D4-v4-iperf3-64-120-instances-5-min.png)
 ### IDPS-Alert-and-Deny-D4-v4-vegeta-http-rate-50-1M-reply-120-instances-5-min
@@ -687,9 +687,9 @@ protocol = "" # vegeta specific
 ```
 
 * Throughput :
-* Latency :   ( include server processing delay )
+* Latency mean :   ( include server processing delay )
 
-[stats](stats-IDPS-Alert-and-Deny-D4-v4-vegeta-http-rate-50-1M-reply-120-instances-5-min.csv)
+[stats](/supplementals/stats/stats-IDPS-Alert-and-Deny-D4-v4-vegeta-http-rate-50-1M-reply-120-instances-5-min.csv)
 ![Metrics](/supplementals/stats/metrics-IDPS-Alert-and-Deny-D4-v4-vegeta-http-rate-50-1M-reply-120-instances-5-min.png)
 ![Latency](/supplementals/stats/latency-IDPS-Alert-and-Deny-D4-v4-vegeta-http-rate-50-1M-reply-120-instances-5-min.png)
 ### IDPS-Alert-and-Deny-D4-v4-vegeta-https-rate-50-1M-reply-120-instances-5-min
@@ -709,9 +709,9 @@ protocol = "" # vegeta specific
 ```
 
 * Throughput :
-* Latency :   ( include server processing delay )
+* Latency mean :   ( include server processing delay )
 
-[stats](stats-IDPS-Alert-and-Deny-D4-v4-vegeta-https-rate-50-1M-reply-120-instances-5-min.csv)
+[stats](/supplementals/stats/stats-IDPS-Alert-and-Deny-D4-v4-vegeta-https-rate-50-1M-reply-120-instances-5-min.csv)
 ![Metrics](/supplementals/stats/metrics-IDPS-Alert-and-Deny-D4-v4-vegeta-https-rate-50-1M-reply-120-instances-5-min.png)
 ![Latency](/supplementals/stats/latency-IDPS-Alert-and-Deny-D4-v4-vegeta-https-rate-50-1M-reply-120-instances-5-min.png)
 ### IDPS-Alert-and-Deny-D4-v4-iperf3-64-120-instances-5-min
@@ -731,8 +731,8 @@ protocol = "" # vegeta specific
 ```
 
 * Throughput :
-* Latency :   ( include server processing delay )
+* Latency mean :   ( include server processing delay )
 
-[stats](stats-IDPS-Alert-and-Deny-D4-v4-iperf3-64-120-instances-5-min.csv)
+[stats](/supplementals/stats/stats-IDPS-Alert-and-Deny-D4-v4-iperf3-64-120-instances-5-min.csv)
 ![Metrics](/supplementals/stats/metrics-IDPS-Alert-and-Deny-D4-v4-iperf3-64-120-instances-5-min.png)
 ![Latency](/supplementals/stats/latency-IDPS-Alert-and-Deny-D4-v4-iperf3-64-120-instances-5-min.png)
