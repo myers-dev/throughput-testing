@@ -101,11 +101,13 @@ def measure_http(ip,duration,rate=50,protocol="http"):
 
     return (o.split("\n"))
 
+scalefactor = 1000000
+
 source_ip = get_sourceip()
 server_ip = get_serverip()
 #server_ip = "10.1.255.254" # if load balancer is in use
 
-duration  = 10 # in minutes 
+duration  = 5 # in minutes 
 
 streams   = 64   # iperf3 specific
 rate      = 50 # 50 - no errors  # vegeta specific
@@ -134,21 +136,21 @@ while True:
             entity.test_type = "iperf3"
             entity.sent_throughput = throughput[0]
             entity.received_throughput = throughput[1]
-            entity.max_rtt = throughput[2]
-            entity.min_rtt = throughput[3]
-            entity.mean_rtt = throughput[4]
+            entity.max_rtt = int(throughput[2])/scalefactor
+            entity.min_rtt = int(throughput[3])/scalefactor
+            entity.mean_rtt = int(throughput[4])/scalefactor
             entity.server = server_ip
             entity.duration = duration
         elif test_type == "vegeta":
             throughput = measure_http(server_ip,(duration-1)*60,rate=rate,protocol=protocol)
             entity.test_type = "vegeta"
             entity.protocol = protocol
-            entity.latency_total = throughput[0]
-            entity.latency_mean = throughput[1]
-            entity.latency_max = throughput[2]
-            entity.latency_min = throughput[3]
+            entity.latency_total = int(throughput[0])/scalefactor
+            entity.latency_mean = int(throughput[1])/scalefactor
+            entity.latency_max = int(throughput[2])/scalefactor
+            entity.latency_min = int(throughput[3])/scalefactor
             entity.throughput = throughput[4]
-            entity.success = throughput[5]]
+            entity.success = throughput[5]
 
         entity.server = server_ip
         #print("ready to insert",entity)

@@ -43,7 +43,8 @@ resource "azurerm_firewall_policy" "azfw-policy" {
   intrusion_detection {
     #mode = "Alert"
     #mode = "Deny"
-    mode = "Off"
+    #mode = "Off"
+    mode = var.idps
   }
 
 }

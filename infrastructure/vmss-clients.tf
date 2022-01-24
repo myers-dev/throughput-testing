@@ -25,8 +25,6 @@ resource "azurerm_linux_virtual_machine_scale_set" "clients" {
   instances      = var.vmssscale
   admin_username = data.azurerm_key_vault_secret.keyvault-username.value
 
-  upgrade_mode = "Automatic"
-
   custom_data = base64encode(data.template_file.client.rendered)
 
   single_placement_group = false

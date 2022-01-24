@@ -537,11 +537,29 @@ In summary, with IDPS off, the http(s) throughput is proportional to the size of
 
 Additionally, we have tested scenarios where source/destinations are set up on AKS clusters. We also tested the scenario with a standard load balancer in front of the servers. Both of them have not provided any performance benefits, despite rebalancing sources and destinations. 
 
-### IDPS Off, D4_v4, vegeta http , rate 50, 1M reply 120 instances, 10 min. 
+### IDPS Off, D4_v4, vegeta http , rate 50, 1M reply 120 instances, 5 min. 
 
-![Metrics]()
-![Latency]()
-### IDPS Off, D4_v4, vegeta https , rate 50, 1M reply, 120 instances, 10 min,
+Variables:
+```
+# terraform.tfvars:
+idps = "Off"
+
+# clients.txt:
+test_type = "vegeta" 
+duration  = 5 # in minutes 
+protocol = "http" # vegeta specific
+
+
+./manual_vmss_scaling.sh 120 # az cli scaling is much faster than with terraform
+```
+
+* Throughput : ~54 Gbps
+* Latency : 209.7 ms ( include server processing delay )
+
+[Stats](/supplementals/stats/stats-IDPS-Off-D4_v4-vegeta-http-rate-50-1M-reply-120-instances-5-min.csv)
+![Metrics](/supplementals/stats/metrics-IDPS-Off-D4_v4-vegeta-http-rate-50-1M-reply-120-instances-5-min.png)
+![Latency](/supplementals/stats/latency-IDPS-Off-D4_v4-vegeta-http-rate-50-1M-reply-120-instances-5-min.png)
+### IDPS Off, D4_v4, vegeta https , rate 50, 1M reply, 120 instances, 5 min,
 
 
 ![Metrics]()
@@ -553,34 +571,34 @@ Additionally, we have tested scenarios where source/destinations are set up on A
 ![Metrics]()
 ![Latency]()
 
-### IDPS Alert, D4_v4, vegeta http , rate 50, 1M reply, 120 instances, 10 min.
+### IDPS Alert, D4_v4, vegeta http , rate 50, 1M reply, 120 instances, 5 min.
 
 
 ![Metrics]()
 ![Latency]()
 
-### IDPS Alert, D4_v4, vegeta https , rate 50, 1M reply, 120 instances, 10 min.
+### IDPS Alert, D4_v4, vegeta https , rate 50, 1M reply, 120 instances, 5 min.
 
 
 ![Metrics]()
 ![Latency]()
-### IDPS Alert, D4_v4, iperf3/64 , 120 instances, 10 min.
+### IDPS Alert, D4_v4, iperf3/64 , 120 instances, 5 min.
 
 
 ![Metrics]()
 ![Latency]()
-### IDPS Alert and Deny, D4_v4, vegeta http, rate 50, 1M reply , 120 instances, 10 min
+### IDPS Alert and Deny, D4_v4, vegeta http, rate 50, 1M reply , 120 instances, 5 min
 
 
 ![Metrics]()
 ![Latency]()
-### IDPS Alert and Deny, D4_v4, vegeta https, rate 50, 1M reply , 120 instances, 10 min
+### IDPS Alert and Deny, D4_v4, vegeta https, rate 50, 1M reply , 120 instances, 5 min
 
 
 ![Metrics]()
 ![Latency]()
 
-### IDPS Alert and Deny, D4_v4, iperf3/64 , 120 instances, 10 min
+### IDPS Alert and Deny, D4_v4, iperf3/64 , 120 instances, 5 min
 
 ![Metrics]()
 ![Latency]()

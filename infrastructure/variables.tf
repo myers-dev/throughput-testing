@@ -48,3 +48,7 @@ variable "vnets" {
 variable "vmssscale" {
   description = "Number of instances in VMSS"
 }
+
+variable "idps" {
+  description = "idps mode of the firewall. Allowed values are Alert,Deny,Off"
+}
