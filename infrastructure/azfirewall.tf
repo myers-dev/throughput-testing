@@ -1,6 +1,6 @@
 resource "azurerm_public_ip" "azfwpip" {
   name                = "azfw${random_id.id.hex}"
-  domain_name_label = "azfw${random_id.id.hex}"
+  domain_name_label   = "azfw${random_id.id.hex}"
   location            = var.location
   resource_group_name = var.resource_group_name
   allocation_method   = "Static"
@@ -18,9 +18,9 @@ resource "azurerm_firewall" "azfw" {
   resource_group_name = var.resource_group_name
 
   sku_tier = "Premium"
-   
-  zones = [ "1" , "2" , "3" ]
-  
+
+  zones = ["1", "2", "3"]
+
   firewall_policy_id = azurerm_firewall_policy.azfw-policy.id
 
   ip_configuration {
@@ -33,7 +33,7 @@ resource "azurerm_firewall" "azfw" {
 }
 
 resource "azurerm_firewall_policy" "azfw-policy" {
-  name                = "azfw-policy"
+  name = "azfw-policy"
 
   sku = "Premium"
 
@@ -41,7 +41,9 @@ resource "azurerm_firewall_policy" "azfw-policy" {
   location            = var.location
 
   intrusion_detection {
-    mode = "Deny"
+    #mode = "Alert"
+    #mode = "Deny"
+    mode = "Off"
   }
 
 }
@@ -99,25 +101,25 @@ resource "azurerm_firewall_policy_rule_collection_group" "azfw-policy" {
       destination_ports     = ["*"]
     }
   }
-#
-#   application_rule_collection {
-#    name     = "app_rule_collection1"
-#    priority = 300
-#    action   = "Deny"
-#    rule {
-#      name = "app_rule_collection1_rule1"
-#      protocols {
-#        type = "Http"
-#        port = 80
-#      }
-#      protocols {
-#        type = "Https"
-#        port = 443
-#      }
-#      source_addresses  = ["*"]
-#      destination_fqdns = ["*"]
-#    }
-#  }
+  #
+  #   application_rule_collection {
+  #    name     = "app_rule_collection1"
+  #    priority = 300
+  #    action   = "Deny"
+  #    rule {
+  #      name = "app_rule_collection1_rule1"
+  #      protocols {
+  #        type = "Http"
+  #        port = 80
+  #      }
+  #      protocols {
+  #        type = "Https"
+  #        port = 443
+  #      }
+  #      source_addresses  = ["*"]
+  #      destination_fqdns = ["*"]
+  #    }
+  #  }
 
 
 

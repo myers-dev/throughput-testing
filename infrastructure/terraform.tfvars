@@ -49,7 +49,7 @@ vnets = {
   }
 }
 
-vmssscale = 1
+vmssscale = 0
 
 
 

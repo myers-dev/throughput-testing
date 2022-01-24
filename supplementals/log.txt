@@ -1,0 +1,88 @@
+1/19/2022
+
+12:30 - 12:45 : vegeta http ; IDPS Alert and Deny ; 50 VMSS ; Reply 1M -> Rate 9Gbps
+
+1:20 - 1:25 ; iperf3 ; IDPS Alert and Deny ; 60 VMSS ; -> Rate 9Gbps
+
+3:10 - 3:20 iperf3 ; IDPS Alert and Deny ; 60 VMSS -> rate 9Gbps
+
+3:40 - 4:00 vegeta http ; IDPS off ; 50 per second ; 60 VMSS -> rate 25Gbps; 1Mb file ; success = 1
+
+4:00 - 4:20 vegeta  http; IDPS off ; 200 per second ; 60 VMSS -> rate 25Gbps; 1Mb file ; success = 0.25
+
+5:20 - 5:30 : vegeta http ; IDPS Alert and Deny ; 60 VMSS ; rate 50 Reply 1M -> Rate 9Gbps
+
+5:50 - 6:00 : vegeta http ; IDPS Alert and Deny ; 60 VMSS ; rate 50 Reply 1M -> Rate 25Gbps
+
+1/20/2022
+
+1:30 - 1:35 vegeta http; IDPS off ;Rate 50 ;  80 VMSS ; Reply 1Mb -> Rate 35Gbps
+
+1:50 - 2:00 vegeta http; IDPS off ; Rate 50 ; 80 VMSS ; Reply 10Mb -> Rate 35Gbps
+
+2:10 - 2:20  vegeta http; IDPS off ; Rate 200 80 VMSS ; Reply 1Mb -> Rate 8Gbps
+
+2:30- 2:40 vegeta http; IDPS A&D ; Rate 50 80 VMSS ; Reply 1Mb -> Rate 9 Gbps
+
+-insecure 
+3:15-3:20 vegeta https; IDPS OFF ; Rate 50 80 VMSS ; Reply 1Mb ; 5 minutes -> Rate 35 Gbps
+
+3:40 - 3:45 vegeta https; IDPS A&D ; Rate 50 80 VMSS ; Reply 1Mb ; 5 minutes -> Rate 9 Gbps
+
+1kb : IDPS off : -----------------------------------
+1 VM
+
+echo "GET http://10.1.0.6" | vegeta attack -duration=10s -rate=10000 | vegeta report
+Requests      [total, rate, throughput]         100000, 10000.09, 9866.44
+Duration      [total, attack, wait]             10.135s, 10s, 135.451ms
+Latencies     [min, mean, 50, 90, 95, 99, max]  777.9µs, 1.774ms, 1.284ms, 2.065ms, 2.469ms, 8.014ms, 404.768ms
+Bytes In      [total, mean]                     138600000, 1386.00
+Bytes Out     [total, mean]                     0, 0.00
+Success       [ratio]                           100.00%
+Status Codes  [code:count]                      200:100000
+Error Set:
+
+echo "GET http://10.1.0.6" | vegeta attack -duration=10s -rate=20000 | vegeta report
+Requests      [total, rate, throughput]         200000, 19912.13, 8011.35
+Duration      [total, attack, wait]             10.341s, 10.044s, 297.205ms
+Latencies     [min, mean, 50, 90, 95, 99, max]  16.3µs, 154.481ms, 166.708ms, 364.812ms, 398.321ms, 522.508ms, 997.885ms
+Bytes In      [total, mean]                     114827328, 574.14
+Bytes Out     [total, mean]                     0, 0.00
+Success       [ratio]                           41.42%
+Status Codes  [code:count]                      0:117152  200:82848
+Error Set:
+Get "http://10.1.0.6": dial tcp 0.0.0.0:0->10.1.0.6:80: socket: too many open files
+
+echo "GET http://10.1.0.6" | vegeta attack -duration=60s -rate=10000 | vegeta report
+Requests      [total, rate, throughput]         600000, 9999.97, 9973.09
+Duration      [total, attack, wait]             1m0s, 1m0s, 156.236ms
+Latencies     [min, mean, 50, 90, 95, 99, max]  29.1µs, 2.754ms, 1.511ms, 3.935ms, 5.088ms, 15.48ms, 401.111ms
+Bytes In      [total, mean]                     831523770, 1385.87
+Bytes Out     [total, mean]                     0, 0.00
+Success       [ratio]                           99.99%
+Status Codes  [code:count]                      0:55  200:599945
+Error Set:
+Get "http://10.1.0.6": dial tcp 0.0.0.0:0->10.1.0.6:80: socket: too many open files
+
+
+4:50-5:00 vegeta http; IDPS off ; Rate 10000 80 VMSS ; Reply 1kb -> Rate 10-11Gbps:
+
+5:05 - 5:20 vegeta http; IDPS A&D ; Rate 10000 80 VMSS ; Reply 1kb -> Rate 4Gbps ::::
+
+
+Standard_D2_v4 https://docs.microsoft.com/en-us/azure/virtual-machines/dv4-dsv4-series 5000Mbps
+
+D2_v4 rate100+100 / 1M IDPS Off 64 streams 10 min rate 50 - 45 Gbps
+
+Load balancer 400 rate D4_v4 1M reply IDPS OFF 40 / 160 - not impressed
+
+Enable accelerated networking D2_v4 rate100+100 / 1M IDPS Off 64 streams 10 min rate 50  - 45 Gbps :-(
+    
+Enable accelerated networking D2_v4 120/70(lb) / 1M IDPS Off 64 streams 10 min rate 50  - 40 Gbps 
+
+before 4:50-5:07 1/23 enable accelerated networking D2_v4 120/120 / 1M IDPS Off 64 streams 10 min rate 50  - 55 Gbps 
+
+5:20 - 5:28 1/23 enable accelerated networking D2_v4 120/120 / 1M IDPS A&D 64 streams 10 min rate 50  - 10-9 Gbps 
+
+5:41 - 5:59 1/23 enable accelerated networking D2_v4 120/120 / 1M IDPS Alert only 64 streams 10 min rate 50  - 45 Gbps
+

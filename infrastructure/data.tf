@@ -14,7 +14,7 @@ data "azurerm_key_vault_secret" "keyvault-password" {
 
 data "azurerm_ssh_public_key" "sshkey" {
   name                = "desktop"
-  resource_group_name = "${var.resource_group_name}"
+  resource_group_name = var.resource_group_name
 }
 
 data "azurerm_key_vault_secret" "sharedkey" {
@@ -26,7 +26,7 @@ data "azurerm_subscription" "current" {
 }
 
 data "external" "my_ip" {
-  program   = [
+  program = [
     "/bin/bash", "scripts/my_ip.sh"
   ]
 }

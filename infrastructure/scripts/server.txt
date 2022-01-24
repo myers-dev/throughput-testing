@@ -27,7 +27,7 @@ sed -i "s/# listen 443/  listen 443/" /etc/nginx/sites-available/default
 
 # generate random file
 mv /var/www/html/index.nginx-debian.html /var/www/html/index.nginx-debian.html.bac 
-dd if=/dev/urandom  bs=1024 count=1000 | base64 > /var/www/html/index.nginx-debian.html
+dd if=/dev/urandom  bs=1024 count=1000 | base64 > /var/www/html/index.nginx-debian.html # for 1M count = 1000
 
 service nginx restart
 
@@ -36,17 +36,17 @@ sudo apt install python3-pip -y
 pip3 install azure.servicebus
 
 # ethr installation
-wget https://github.com/microsoft/ethr/releases/download/v1.0.0/ethr_linux.zip
-unzip ethr_linux.zip
-chmod +x ethr
-cp ethr /usr/bin
+# wget https://github.com/microsoft/ethr/releases/download/v1.0.0/ethr_linux.zip
+# unzip ethr_linux.zip
+# chmod +x ethr
+# cp ethr /usr/bin
 
 # ntttcp installation 
-cd ~
-git clone https://github.com/Microsoft/ntttcp-for-linux
-cd ntttcp-for-linux/src
-make
-make install
+# cd ~
+# git clone https://github.com/Microsoft/ntttcp-for-linux
+# cd ntttcp-for-linux/src
+# make
+# make install
 
 cd ~
 

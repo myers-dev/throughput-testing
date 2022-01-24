@@ -1,16 +1,51 @@
-# Azure Fierewall premium throughput testing
+# Azure Firewall premium throughput testing
 
 ## Overview
 
-The topology for the throughput testing is shown below. This is a classic hub-and-spoke topology with a deployment of Azure Firewall Premium in the hub. 
+The exercise aims to evaluate how the Azure Firewall Premium SKU performs under stress. A number of variables were measured, including throughput and delay for both IP and HTTP/HTTPS traffic. The performance of the Firewall was evaluated for different modes of IDPS - Alert, Alert and Deny, and Off. Some of the tests were performed without enabling AFWEnableAccelnet. 
+
+The topology ( with slight variabions ) for the throughput testing is shown below. This is a classic hub-and-spoke topology with a deployment of Azure Firewall Premium in the hub. 
 Deployment code ( terraform ) is in [this](infrastructure/) folder.
+
+The Firewall evaluated from the perspective of :
+
+1. One flow performance
+
+1. Combined IP performance ( IDPS Off)
+
+1. IDPS related tests:
+
+   * HTTP(s) performance ( IDPS Off, Alert, Alert and Deny )
+
+   * IP performance ( IDPS Off, Alert , Alert and Deny )
+
+   * RTT for IP ( IDPS Off, Alert, Alert and Deny)
+
+   * RTT for HTTP(s) ( IDPS Off, Alert, Alert and Deny)
+
+
 
 ![Topology](supplementals/img/Topology0.png)
 
-There were two VM sizes tested: DS4_v2 and DS5_v2, which offer [performance](https://docs.microsoft.com/en-us/azure/virtual-machines/dv2-dsv2-series) of 6 and 12Gbps respectively.
 
+There were three different VM sizes used, namely D4_v4, D5_v2, and DS4_v2.
 
-## iperf3 tests  - Azure Firewall Premium , AFWEnableAccelnet = False 
+In comparison to the others, D4_v4 displays the best ratio of vCPU to network performance. Read more on performance data of VMs above [here](https://docs.microsoft.com/en-us/azure/virtual-machines/dv2-dsv2-series) and [here](https://docs.microsoft.com/en-us/azure/virtual-machines/dv2-dsv2-series)
+
+Summary of the VM performance:
+
+| VM size | vCPU | Expected Network bandwidth (Mbps) | Doc
+|-----------|---------|--------|-------|
+|D4_v4|4|10,000|https://docs.microsoft.com/en-us/azure/virtual-machines/dv4-dsv4-series
+|D5_v2|16|12,000|https://docs.microsoft.com/en-us/azure/virtual-machines/dv2-dsv2-series
+|DS4_v2|8|6,000|https://docs.microsoft.com/en-us/azure/virtual-machines/dv2-dsv2-series
+|D48_v3|48|24,000|https://docs.microsoft.com/en-us/azure/virtual-machines/dv3-dsv3-series
+
+## Baseline tests. 
+
+Learn more about Azure Firewall Performance Boost here - https://docs.microsoft.com/en-us/azure/firewall/firewall-performance . 
+
+Below you will find the results of Iperf3 tests over the Azure Firewall Premium, with the AFWEnableAccelnet is set to False.
 
 ### iperf3 spoke1 to spoke2 ( no tunneling )
 
@@ -35,7 +70,7 @@ Connecting to host 10.1.0.4, port 5201
 ```
 ### iperf3 spoke1 to hub (bypassing firewall)
 
-One Flow (DS4_v2 with AN) - close to the target performance
+One Flow (DS4_v2 with AN) - There is no doubt that total bandwidth (for both tests) is close to the maximum network performance of the VM. 
 ```
 azureadmin@spoke1-vm:~$ iperf3 -c 10.0.1.4
 Connecting to host 10.0.1.4, port 5201
@@ -54,7 +89,9 @@ iperf Done.
 [SUM]   0.00-10.00  sec  6.73 GBytes  5.78 Gbits/sec    0             sender
 [SUM]   0.00-10.00  sec  6.66 GBytes  5.72 Gbits/sec                  receiver
 ```
-## Combining flows with vxlan encapsulation
+
+## One Flow performance
+### Combining flows with vxlan encapsulation
 
 The best way to combine multiple flows is to wrap them with Vxlan encapsulation: (IPIP and GRE are not permitted in Azure)
 
@@ -72,7 +109,7 @@ ip addr add 10.77.0.2/30 dev vxlan1
 ```
 
 ```
-# spoke to spoke over VXLAN : 64 flows DS4_v2 with AN
+# spoke to spoke over VXLAN : 64 flows DS4_v2 with AN ; The performance of the session fluctuates between 2.5 Gbps, as expected. 
 
 root@spoke1-vm:~# iperf3 -P 64 -c 10.77.0.2
 [SUM]   0.00-10.00  sec  2.89 GBytes  2.48 Gbits/sec  214             sender
@@ -92,10 +129,13 @@ root@spoke1-vm:~# iperf3 -P 128 -c 10.77.0.2
 [SUM]   0.00-10.00  sec  2.13 GBytes  1.83 Gbits/sec                  receiver
 ```
 
-## Register AFWEnableAccelnet feature
+### Register AFWEnableAccelnet feature
+
+To enable the Azure Firewall Premium performance boost, run the following Azure PowerShell commands. This feature is applied at the subscription level for all Firewalls (VNet Firewalls and SecureHub Firewalls). More [here](https://docs.microsoft.com/en-us/azure/firewall/firewall-performance)
+
 
 ```
-Select-AzSubscription -Subscription ACAI_Network_Internal_1
+Select-AzSubscription -Subscription <subscription_name>
 
 Register-AzProviderFeature -Featurename AFWEnableAccelnet  -ProviderNamespace Microsoft.Network
 
@@ -166,8 +206,13 @@ on DS4_v2 with AN spoke to hub , bypassing firewall . vxlan 1 to vxlan 2 , 64 fl
 
 ```
 
-## Test based on Standard_D48_v3
+What does the above result mean? 
 
+When AFWEnableAccelnet is enabled, the performance of the single flow reaches the maximum allowed by the virtual machine. 
+
+### Test based on Standard_D48_v3
+
+Summary : The max performance of one flow is close to 10Gbps. Even on VMs that can handle 24Gbps, a single transit flow through Azure Firewall is limited to 10Gbps. This is 4x better than 2.5Gbps Firewall performance with AFWEnableAccelnet is disabled. 
 
 | Test Case  | VM size | Src | Dst | Encap | Proto | Flows | Performance | Note |
 |-----------|---------|--------|-------------|---------------|----------|       :-:       |     :-:     |  :-: |
@@ -181,6 +226,10 @@ on DS4_v2 with AN spoke to hub , bypassing firewall . vxlan 1 to vxlan 2 , 64 fl
 | 8. 64 flows iperf3 spoke to spoke | Standard_DS5_v2 [12 Mbps](https://docs.microsoft.com/en-us/azure/virtual-machines/dv2-dsv2-series) | spoke1 (10.2.0.4) | spoke2 (10.1.0.4) | native | iperf3 | 64 | 10.9 Gbps/s| [linky](#test-case-8-64-flows-iperf3-spoke-to-spoke)
 | 9. One flow iperf3 spoke to spoke encapsulated to VXLAN |Standard_DS5_v2 [12 Mbps](https://docs.microsoft.com/en-us/azure/virtual-machines/dv2-dsv2-series)| spoke1 (10.77.0.1) | spoke2 (10.77.0.2) | VXLAN | iperf3 | 1 | 1.37 Gbps/s | [linky](#test-case-9-one-flow-iperf3-spoke-to-spoke-encapsulated-to-vxlan)
 | 10. 64 flows iperf3 spoke to spoke encapsulated to VXLAN | Standard_DS5_v2 [12 Mbps](https://docs.microsoft.com/en-us/azure/virtual-machines/dv2-dsv2-series) | spoke1 (10.77.0.1) | spoke2 (10.77.0.2) | VXLAN | iperf3 | 64 | 10.7 Gbps/s | [linky](#test-case-10-64-flows-iperf3-spoke-to-spoke-encapsulated-to-vxlan)
+
+How would you interpret the above result? 
+
+When AFWEnableAccelnet is enabled, the performance of the single flow reaches the 10Gbps. 
 
 ### Test case 1 - One flow iperf3 spoke to spoke
 
@@ -303,6 +352,8 @@ dd if=/dev/urandom of=10gb-file bs=1000000000 count=10 iflag=fullblock # takes a
 
 ### Test case 6 - 64 flows spoke to spoke lftp encapsulated to VXLAN
 
+Iperf3 is, in fact, the best performance testing tool. It is extremely difficult to fill up a pipe completely using ftp. 
+
 spoke1
 ```
 lftp -e 'pget -n 64 ftp://10.77.0.2/10gb-file;quit'
@@ -310,8 +361,6 @@ lftp -e 'pget -n 64 ftp://10.77.0.2/10gb-file;quit'
 10000000000 bytes transferred in 31 seconds (305.19 MiB/s)
 
 ```
-
-spoke2
 
 ### Test case 7. One flow iperf3 spoke to spoke 
 ```
@@ -343,15 +392,16 @@ spoke2
 [ ID] Interval           Transfer     Bandwidth       Retr
 [  4]   0.00-10.00  sec  1.59 GBytes  1.37 Gbits/sec   84             sender
 [  4]   0.00-10.00  sec  1.59 GBytes  1.37 Gbits/sec                  receiver
+```
 ### Test case 10. 64 flows iperf3 spoke to spoke encapsulated to VXLAN 
-
+```
 [SUM]   0.00-10.00  sec  12.5 GBytes  10.7 Gbits/sec  17549             sender
 [SUM]   0.00-10.00  sec  12.4 GBytes  10.6 Gbits/sec                  receiver
 ```
 
 ## Combined throughput on max-pre-scaled Firewall Premium. 
 
-The following three methods were used in order to verify the performance of the Firewall Premium prescaling to 20 instances:
+The purpose of the test is to max out the Firewall's combined performance. The following three methods were used in order to verify the performance of the Firewall Premium prescaled to 20 instances:
 
 1. iperf3 30 sec, short-duration flows in VMSS , combined over 30 instances
 2. iperf3 280 sec , longer-duration flows, with 64x multiplier , combined over 30 instances. Compared with AZFW Throughput Metrics
@@ -413,7 +463,7 @@ Here is an example of iperf3 test with 64 flows
 | IDPS |# of instances| Iperf3 -P64 |Source/Destination VM size| 
 |------|-------------|--------------------------|--------|
 |Disabled|10|92.1 Gbits/sec|Standard_D4_v4||
-|Alert and Deny|10|8.6G bits/sec|Standard_D4_v4|
+|Alert and Deny|10|8.6 Gbits/sec|Standard_D4_v4|
 
 ![Visualization](supplementals/stats/stats-IDPS-on-off.png)
 
@@ -429,7 +479,7 @@ As an example, here is an iperf3 test of 64 flows (combined data). The top graph
 
 [Metrics](supplementals/stats/IDPS-network-delay-stats.xlsx)
 
-## RTT measurements in iperf3
+## RTT measurements in iperf3 and vegeta
 
 As per [esnet/iperf](https://github.com/esnet/iperf/commit/432ef7ebb3abfedcb87b717b251eb72fc1a2d0c3) :
 
@@ -453,3 +503,84 @@ vs. "everything else".  Fixing this requires some rearchitecting of
 the way that we retrieve, compute, and print statistics.
 
 RTT returned in [usec](https://github.com/esnet/iperf/blob/332c31ee6512514c216077407a725b5b958b1582/src/tcp_info.c#L168)
+
+To convert vegeta-reported lateny to ms divide the result by 1,000,000
+
+```
+echo "GET http://10.1.0.5" | vegeta attack -duration=10s -insecure -rate=50 | vegeta report
+Latencies     [min, mean, 50, 90, 95, 99, max]  53.076ms, 65.005ms, 62.132ms, 69.608ms, 79.67ms, 112.85ms, 192.376ms
+
+{
+  "latencies": {
+    "total": 38415392406,
+    "mean": 76830784,
+    "50th": 64352932,
+    "90th": 109928619,
+    "95th": 117367639,
+    "99th": 206221839,
+    "max": 374886829,
+    "min": 50137960
+  }
+
+ 65ms ~  76830784/1000000
+```
+
+
+## Comparison of Throughput and RTT for HTTP(s)
+
+
+We used vegeta ( https://github.com/tsenart/vegeta ) and nginx ( https://github.com/nginx/nginx ) in client/server scenario for load generation. VMSS of different sizes ( 40 - 120 ) used for testing. 
+
+Vegeta used with the rate set to 50 for http(s), nginx generate 1Mb random file. 
+
+In summary, with IDPS off, the http(s) throughput is proportional to the size of VMSS, but with IDPS set to Alert and Deny, the throughput dropped to 9Gbps. With Alert, performance was decreased by 10%. Read more below. 
+
+Additionally, we have tested scenarios where source/destinations are set up on AKS clusters. We also tested the scenario with a standard load balancer in front of the servers. Both of them have not provided any performance benefits, despite rebalancing sources and destinations. 
+
+### IDPS Off, D4_v4, vegeta http , rate 50, 1M reply 120 instances, 10 min. 
+
+![Metrics]()
+![Latency]()
+### IDPS Off, D4_v4, vegeta https , rate 50, 1M reply, 120 instances, 10 min,
+
+
+![Metrics]()
+![Latency]()
+
+### IDPS Off, D4_v4, iperf3/64 , 120 instances, 10 min,
+
+
+![Metrics]()
+![Latency]()
+
+### IDPS Alert, D4_v4, vegeta http , rate 50, 1M reply, 120 instances, 10 min.
+
+
+![Metrics]()
+![Latency]()
+
+### IDPS Alert, D4_v4, vegeta https , rate 50, 1M reply, 120 instances, 10 min.
+
+
+![Metrics]()
+![Latency]()
+### IDPS Alert, D4_v4, iperf3/64 , 120 instances, 10 min.
+
+
+![Metrics]()
+![Latency]()
+### IDPS Alert and Deny, D4_v4, vegeta http, rate 50, 1M reply , 120 instances, 10 min
+
+
+![Metrics]()
+![Latency]()
+### IDPS Alert and Deny, D4_v4, vegeta https, rate 50, 1M reply , 120 instances, 10 min
+
+
+![Metrics]()
+![Latency]()
+
+### IDPS Alert and Deny, D4_v4, iperf3/64 , 120 instances, 10 min
+
+![Metrics]()
+![Latency]()

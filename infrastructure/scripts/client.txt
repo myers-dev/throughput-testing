@@ -17,31 +17,31 @@ pip3 install azure.servicebus
 pip3 install setuptools_rust
 pip3 install cryptography
 pip3 install azure.cosmosdb.table
-pip3 install iperf3
 
 # Adjusting the timezone
 timedatectl set-timezone America/New_York
 
-# ethr installation 
-wget https://github.com/microsoft/ethr/releases/download/v1.0.0/ethr_linux.zip
-unzip ethr_linux.zip
-chmod +x ethr
-cp ethr /usr/bin
+# ethr installation (uncomment if tool is needed)
+# cd ~
+# wget https://github.com/microsoft/ethr/releases/download/v1.0.0/ethr_linux.zip
+# unzip ethr_linux.zip
+# chmod +x ethr
+# cp ethr /usr/bin
 
-# wrk testing suite
-cd ~
-git clone https://github.com/wg/wrk
-cd wrk
-make
-chmod +x wrk
-cp wrk /usr/bin/
+# wrk testing suite (uncomment if tool is needed)
+# cd ~
+# git clone https://github.com/wg/wrk
+# cd wrk
+# make
+# chmod +x wrk
+# cp wrk /usr/bin/
 
-# ntttcp
-cd ~
-git clone https://github.com/Microsoft/ntttcp-for-linux
-cd ntttcp-for-linux/src
-make
-make install
+# ntttcp  (uncomment if tool is needed)
+# cd ~
+# git clone https://github.com/Microsoft/ntttcp-for-linux
+# cd ntttcp-for-linux/src
+# make
+# make install
 
 cd ~
 
@@ -82,15 +82,11 @@ def get_serverip():
         msg = None
         while not msg:
             receiver = servicebus_client.get_queue_receiver(queue_name='${QUEUE_NAME}', max_wait_time=5)
-
+            
             with receiver:
                 for msg in receiver:
                     receiver.complete_message(msg)
                     return (str(msg))
-                
-
-    throughput = [ result.sent_Mbps, result.received_Mbps ]
-    return(throughput)
 
 def measure_throughput(ip,duration,streams=64):
     o=os.popen(f"iperf3 -c {ip} -t {duration} -P{streams} -J | jq \".end.sum_sent.bits_per_second, .end.sum_received.bits_per_second, .end.streams[0].sender.max_rtt, .end.streams[0].sender.min_rtt, .end.streams[0].sender.mean_rtt\" ").read()
@@ -98,10 +94,25 @@ def measure_throughput(ip,duration,streams=64):
     return (o.split("\n"))
 
 
+def measure_http(ip,duration,rate=50,protocol="http"):
+    filter = '.latencies.total, .latencies.mean, .latencies.max, .latencies.min, .throughput, .success'
+
+    o=os.popen(f"echo \"GET {protocol}://{ip}\" | vegeta attack -duration={duration}s -insecure -rate={rate} | vegeta report -type=json | jq \"{filter}\" ").read()
+
+    return (o.split("\n"))
+
 source_ip = get_sourceip()
 server_ip = get_serverip()
-duration  = 55
-streams   = 1
+#server_ip = "10.1.255.254" # if load balancer is in use
+
+duration  = 10 # in minutes 
+
+streams   = 64   # iperf3 specific
+rate      = 50 # 50 - no errors  # vegeta specific
+protocol = "http" # vegeta specific
+
+test_type = "vegeta" # iperf3 , vegeta
+
 
 # ------------------------------
 
@@ -109,7 +120,7 @@ streams   = 1
 table_service = TableService(account_name='${STORAGEACCOUNT}', account_key='${STORAGEACCOUNTKEY}')
 
 while True:
-    if int(datetime.datetime.now().strftime("%S")) == 0:  # and int(datetime.datetime.now().strftime("%M"))%30 == 0 
+    if int(datetime.datetime.now().strftime("%S")) == 0 and int(datetime.datetime.now().strftime("%M"))%duration == 0:
         n = datetime.datetime.now().strftime("%m %d %Y %H %M %S")
 
         # --------------------------------
@@ -117,20 +128,34 @@ while True:
         entity = Entity()
         entity.PartitionKey = source_ip
         entity.RowKey = n
-        throughput = measure_throughput(server_ip,duration,streams)
-        entity.sent_throughput = throughput[0]
-        entity.received_throughput = throughput[1]
-        entity.max_rtt = throughput[2]
-        entity.min_rtt = throughput[3]
-        entity.mean_rtt = throughput[4]
-        entity.server = server_ip
-        entity.duration = duration
-        print("ready to insert",entity)
-        table_service.insert_entity('stats', entity)
-        print("inserted",entity)
 
+        if test_type == "iperf3":
+            throughput = measure_throughput(server_ip,(duration-1)*60,streams)
+            entity.test_type = "iperf3"
+            entity.sent_throughput = throughput[0]
+            entity.received_throughput = throughput[1]
+            entity.max_rtt = throughput[2]
+            entity.min_rtt = throughput[3]
+            entity.mean_rtt = throughput[4]
+            entity.server = server_ip
+            entity.duration = duration
+        elif test_type == "vegeta":
+            throughput = measure_http(server_ip,(duration-1)*60,rate=rate,protocol=protocol)
+            entity.test_type = "vegeta"
+            entity.protocol = protocol
+            entity.latency_total = throughput[0]
+            entity.latency_mean = throughput[1]
+            entity.latency_max = throughput[2]
+            entity.latency_min = throughput[3]
+            entity.throughput = throughput[4]
+            entity.success = throughput[5]]
+
+        entity.server = server_ip
+        #print("ready to insert",entity)
+        table_service.insert_entity('stats', entity)
+        #print("inserted",entity)
 
 EOF
 
 # Uncomment for traffic generator
-#python3 client.py
+python3 client.py

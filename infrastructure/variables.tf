@@ -32,9 +32,9 @@ variable "security_group_name" {
 }
 
 variable "vnets" {
-    description = "List of Vnets names"  
-    type = map(object(    
-    {     
+  description = "List of Vnets names"
+  type = map(object(
+    {
       address_space                                  = list(string)
       subnet_names                                   = list(string)
       subnet_prefixes                                = list(string)

@@ -9,9 +9,9 @@ resource "azurerm_route_table" "RT" {
   ]
 
   route {
-    name           = "default"
-    address_prefix = "10.0.0.0/8"
-    next_hop_type  = "VirtualAppliance"
+    name                   = "default"
+    address_prefix         = "10.0.0.0/8"
+    next_hop_type          = "VirtualAppliance"
     next_hop_in_ip_address = azurerm_firewall.azfw.ip_configuration[0].private_ip_address
   }
 

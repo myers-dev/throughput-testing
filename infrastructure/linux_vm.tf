@@ -1,9 +1,9 @@
 locals {
-  vm_loc = { "spoke1" = var.vnets["spoke1"], 
-               "spoke2" = var.vnets["spoke2"],
-               "AZFPVNET"    = var.vnets["AZFPVNET"] 
-           }
-} 
+  vm_loc = { "spoke1" = var.vnets["spoke1"],
+    "spoke2"   = var.vnets["spoke2"],
+    "AZFPVNET" = var.vnets["AZFPVNET"]
+  }
+}
 
 resource "azurerm_network_interface" "nic" {
 
