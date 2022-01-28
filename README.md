@@ -664,32 +664,34 @@ vmss_size = "Standard_D4_v4"
 testduration  = 5
 testprotocol = "" 
 testiperf3flows = "64"
-```
+
 
 ./manual_vmss_scaling.sh 30 # az cli scaling is much faster than with terraform
-
-* Throughput :
-* Latency mean :   ( include server processing delay )
+```
+* Throughput : ~ 55Gbps
+* Latency mean :  76472.87538 ( include server processing delay )
 
 [stats](/supplementals/stats/stats-IDPS-Alert-D4-v4-iperf3-64-30-instances-5-min.csv)
 ![Metrics](/supplementals/stats/metrics-IDPS-Alert-D4-v4-iperf3-64-30-instances-5-min.png)
 ![Latency](/supplementals/stats/latency-IDPS-Alert-D4-v4-iperf3-64-30-instances-5-min.png)
+![Comparison](/supplementals/stats/metrics-IDPS-vs-noIDPS-Alert-D4-v4-iperf3-64-30-instances-5-min.png)
 ### IDPS-Alert-and-Deny-D4-v4-vegeta-http-rate-50-1M-reply-120-instances-5-min
 
 Variables:
 ```
 # terraform.tfvars:
-idps = ""
-testtype = ""
-testduration  =  
-testprotocol = "" 
+idps = "Deny"
+testtype = "vegeta"
+testduration  =  5
+testprotocol = "http" 
 
 
 ./manual_vmss_scaling.sh 120 # az cli scaling is much faster than with terraform
 ```
 
-* Throughput :
-* Latency mean :   ( include server processing delay )
+* Throughput : ~ 9.7 Gbps
+* Latency mean : 29801.40659  ( include server processing delay )
+* Success rate : ~0.26%
 
 [stats](/supplementals/stats/stats-IDPS-Alert-and-Deny-D4-v4-vegeta-http-rate-50-1M-reply-120-instances-5-min.csv)
 ![Metrics](/supplementals/stats/metrics-IDPS-Alert-and-Deny-D4-v4-vegeta-http-rate-50-1M-reply-120-instances-5-min.png)
@@ -699,41 +701,42 @@ testprotocol = ""
 Variables:
 ```
 # terraform.tfvars:
-idps = ""
-testtype = ""
-testduration  =  
-testprotocol = "" 
+idps = "Deny"
+testtype = "vegeta"
+testduration  =  5
+testprotocol = "https" 
 
 
 ./manual_vmss_scaling.sh 120 # az cli scaling is much faster than with terraform
 ```
 
-* Throughput :
-* Latency mean :   ( include server processing delay )
+* Throughput : ~9.2 Gbps
+* Latency mean :  29750.68487 ( include server processing delay )
+* Success rate : ~0.23%
 
 [stats](/supplementals/stats/stats-IDPS-Alert-and-Deny-D4-v4-vegeta-https-rate-50-1M-reply-120-instances-5-min.csv)
 ![Metrics](/supplementals/stats/metrics-IDPS-Alert-and-Deny-D4-v4-vegeta-https-rate-50-1M-reply-120-instances-5-min.png)
 ![Latency](/supplementals/stats/latency-IDPS-Alert-and-Deny-D4-v4-vegeta-https-rate-50-1M-reply-120-instances-5-min.png)
-### IDPS-Alert-and-Deny-D4-v4-iperf3-64-120-instances-5-min
+### IDPS-Alert-and-Deny-D4-v4-iperf3-64-30-instances-5-min
 
 Variables:
 ```
 # terraform.tfvars:
-idps = ""
-testtype = ""
-testduration  =  
+idps = "Deny"
+testtype = "iperf3"
+testduration  =  5
 testprotocol = "" 
 
 
-./manual_vmss_scaling.sh 120 # az cli scaling is much faster than with terraform
+./manual_vmss_scaling.sh 30 # az cli scaling is much faster than with terraform
 ```
 
-* Throughput :
-* Latency mean :   ( include server processing delay )
+* Throughput : ~8.2Gbps
+* Latency mean : 2587547.748
 
-[stats](/supplementals/stats/stats-IDPS-Alert-and-Deny-D4-v4-iperf3-64-120-instances-5-min.csv)
-![Metrics](/supplementals/stats/metrics-IDPS-Alert-and-Deny-D4-v4-iperf3-64-120-instances-5-min.png)
-![Latency](/supplementals/stats/latency-IDPS-Alert-and-Deny-D4-v4-iperf3-64-120-instances-5-min.png)
+[stats](/supplementals/stats/stats-IDPS-Alert-and-Deny-D4-v4-iperf3-64-30-instances-5-min.csv)
+![Metrics](/supplementals/stats/metrics-IDPS-Alert-and-Deny-D4-v4-iperf3-64-30-instances-5-min.png)
+![Latency](/supplementals/stats/latency-IDPS-Alert-and-Deny-D4-v4-iperf3-64-30-instances-5-min.png)
 
 
 ## Notes and Links

@@ -53,12 +53,12 @@ vmss_size = "Standard_D4_v4" # " will try Standard_D2_v4 Standard_DS1_v2 Standar
 
 vmssscale = 0
 
-idps = "Alert" # Off, Alert, Deny
+idps = "Deny" # Off, Alert, Deny
 
-testtype        = "iperf3" # iperf3 or vegeta
+testtype        = "vegeta" # iperf3 or vegeta
 testduration    = "5"
 # vegeta specific
-testprotocol    = "http" # not relevant if testtype=iperf3
+testprotocol    = "https" # not relevant if testtype=iperf3
 # iperf3 specific
 testiperf3flows = "64" # not relevant if testtype=vegeta
 
