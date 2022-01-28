@@ -239,6 +239,8 @@ How would you interpret the above result?
 
 When AFWEnableAccelnet is enabled, the performance of the single flow reaches the 10Gbps. 
 
+Further details about the tests summarized in the above table can be found below
+
 ### Test case 1 - One flow iperf3 spoke to spoke
 
 spoke1 

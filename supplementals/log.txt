@@ -80,7 +80,7 @@ Enable accelerated networking D2_v4 rate100+100 / 1M IDPS Off 64 streams 10 min 
     
 Enable accelerated networking D2_v4 120/70(lb) / 1M IDPS Off 64 streams 10 min rate 50  - 40 Gbps 
 
-before 4:50-5:07 1/23 enable accelerated networking D2_v4 120/120 / 1M IDPS Off 64 streams 10 min rate 50  - 55 Gbps 
+ 4:50-5:07 1/23 enable accelerated networking D2_v4 120/120 / 1M IDPS Off 64 streams 10 min rate 50  - 55 Gbps 
 
 5:20 - 5:28 1/23 enable accelerated networking D2_v4 120/120 / 1M IDPS A&D 64 streams 10 min rate 50  - 10-9 Gbps 
 
