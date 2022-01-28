@@ -3,8 +3,8 @@
 # Dependencies
 apt-get update -y
 apt-get upgrade -y
-apt-get install iproute2 -y
-apt-get install wrk -y
+#apt-get install iproute2 -y
+#apt-get install wrk -y
 apt-get install iperf3 -y
 apt-get install ntp -y
 apt-get install jq -y
@@ -17,6 +17,9 @@ pip3 install azure.servicebus
 pip3 install setuptools_rust
 pip3 install cryptography
 pip3 install azure.cosmosdb.table
+
+# Increasing number of descriptors
+ulimit -n 10000
 
 # Adjusting the timezone
 timedatectl set-timezone America/New_York
@@ -61,6 +64,7 @@ import datetime
 import time
 import socket
 import os
+import random
 
 def get_sourceip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -88,8 +92,9 @@ def get_serverip():
                     receiver.complete_message(msg)
                     return (str(msg))
 
-def measure_throughput(ip,duration,streams=64):
-    o=os.popen(f"iperf3 -c {ip} -t {duration} -P{streams} -J | jq \".end.sum_sent.bits_per_second, .end.sum_received.bits_per_second, .end.streams[0].sender.max_rtt, .end.streams[0].sender.min_rtt, .end.streams[0].sender.mean_rtt\" ").read()
+def measure_throughput(ip,server_port,duration,streams=64):
+    cport=int(random.random()*(65535-49152) + 49152)
+    o=os.popen(f"iperf3 -c {ip} -t {duration} --cport {cport} --port {server_port} -P{streams} -J | jq \".end.sum_sent.bits_per_second, .end.sum_received.bits_per_second, .end.streams[0].sender.max_rtt, .end.streams[0].sender.min_rtt, .end.streams[0].sender.mean_rtt\" ").read()
 
     return (o.split("\n"))
 
@@ -101,19 +106,22 @@ def measure_http(ip,duration,rate=50,protocol="http"):
 
     return (o.split("\n"))
 
-scalefactor = 1000000
+scalefactor_vegeta = 1000000
+scalefactor_iperf3 = 1
 
 source_ip = get_sourceip()
-server_ip = get_serverip()
+
+server_ip,server_port = get_serverip().split()
 #server_ip = "10.1.255.254" # if load balancer is in use
 
-duration  = 5 # in minutes 
+duration  = ${TESTDURATION} # in minutes 
 
-streams   = 64   # iperf3 specific
-rate      = 50 # 50 - no errors  # vegeta specific
-protocol = "http" # vegeta specific
+streams   = ${TESTIPERF3FLOWS}   # iperf3 specific
 
-test_type = "vegeta" # iperf3 , vegeta
+rate      = 50 #                 # vegeta specific
+protocol = "${TESTPROTOCOL}"     # vegeta specific
+
+test_type = "${TESTTYPE}"        # iperf3 , vegeta
 
 
 # ------------------------------
@@ -132,23 +140,23 @@ while True:
         entity.RowKey = n
 
         if test_type == "iperf3":
-            throughput = measure_throughput(server_ip,(duration-1)*60,streams)
+            throughput = measure_throughput(server_ip,server_port,(duration-1)*60,streams)
             entity.test_type = "iperf3"
             entity.sent_throughput = throughput[0]
             entity.received_throughput = throughput[1]
-            entity.max_rtt = int(throughput[2])/scalefactor
-            entity.min_rtt = int(throughput[3])/scalefactor
-            entity.mean_rtt = int(throughput[4])/scalefactor
-            entity.server = server_ip
+            entity.max_rtt = int(throughput[2])/scalefactor_iperf3
+            entity.min_rtt = int(throughput[3])/scalefactor_iperf3
+            entity.mean_rtt = int(throughput[4])/scalefactor_iperf3
+            entity.server = server_ip + ":" + server_port
             entity.duration = duration
         elif test_type == "vegeta":
             throughput = measure_http(server_ip,(duration-1)*60,rate=rate,protocol=protocol)
             entity.test_type = "vegeta"
             entity.protocol = protocol
-            entity.latency_total = int(throughput[0])/scalefactor
-            entity.latency_mean = int(throughput[1])/scalefactor
-            entity.latency_max = int(throughput[2])/scalefactor
-            entity.latency_min = int(throughput[3])/scalefactor
+            entity.latency_total = int(throughput[0])/scalefactor_vegeta
+            entity.latency_mean = int(throughput[1])/scalefactor_vegeta
+            entity.latency_max = int(throughput[2])/scalefactor_vegeta
+            entity.latency_min = int(throughput[3])/scalefactor_vegeta
             entity.throughput = throughput[4]
             entity.success = throughput[5]
 

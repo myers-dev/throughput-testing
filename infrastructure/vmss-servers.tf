@@ -19,16 +19,17 @@ resource "azurerm_linux_virtual_machine_scale_set" "servers" {
   location            = var.location
   resource_group_name = var.resource_group_name
 
-  sku = "Standard_D4_v4" # "Standard_D4_v4" # "Standard_DS3_v2" # "Standard_D3_v2" # "Standard_F2"
+  sku = var.vmss_size 
 
   instances      = var.vmssscale
   admin_username = data.azurerm_key_vault_secret.keyvault-username.value
 
-  upgrade_mode = "Automatic"
+  upgrade_mode           = "Automatic"
   single_placement_group = false
 
-  #zone_balance = true
+  zone_balance = false
   #zones = [1,2,3]
+  zones = [1]
 
   custom_data = base64encode(data.template_file.server.rendered)
 

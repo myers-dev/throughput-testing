@@ -52,3 +52,26 @@ variable "vmssscale" {
 variable "idps" {
   description = "idps mode of the firewall. Allowed values are Alert,Deny,Off"
 }
+
+variable "testtype" {
+  description = "Test type. Allowed Values are : vegeta, iperf3"
+}
+
+variable "testduration" {
+  description = "Test duration in minutes"
+}
+
+variable "testprotocol" {
+  description = "Test protocol. Allowed values are http, https. Ignored if testtype is iperf3"
+  default     = "http"
+}
+
+variable "testiperf3flows" {
+  description = "iperf3 specific. Number of flows"
+  default     = "64"
+}
+
+variable "vmss_size" {
+  description = "VMSS VM Size"
+  default     = "Standard_D4_v4"
+}

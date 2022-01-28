@@ -17,6 +17,8 @@ resource "azurerm_servicebus_queue" "this" {
   default_message_ttl = "PT10M"
 
   enable_partitioning = true
+
+  dead_lettering_on_message_expiration = true
 }
 
 resource "azurerm_servicebus_namespace_authorization_rule" "this" {

@@ -42,7 +42,7 @@ resource "azurerm_lb_rule" "http" {
   backend_port                   = 80
   frontend_ip_configuration_name = "FE"
   probe_id                       = azurerm_lb_probe.http.id
-  backend_address_pool_ids      = [ azurerm_lb_backend_address_pool.slbpool.id ]
+  backend_address_pool_ids       = [azurerm_lb_backend_address_pool.slbpool.id]
 }
 
 resource "azurerm_lb_rule" "https" {
@@ -54,5 +54,5 @@ resource "azurerm_lb_rule" "https" {
   backend_port                   = 443
   frontend_ip_configuration_name = "FE"
   probe_id                       = azurerm_lb_probe.https.id
-  backend_address_pool_ids      = [ azurerm_lb_backend_address_pool.slbpool.id ]
+  backend_address_pool_ids       = [azurerm_lb_backend_address_pool.slbpool.id]
 }

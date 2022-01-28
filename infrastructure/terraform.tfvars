@@ -49,10 +49,16 @@ vnets = {
   }
 }
 
+vmss_size = "Standard_D4_v4" # " will try Standard_D2_v4 Standard_DS1_v2 Standard_DS1_v2 and F1s" "Standard_D4_v4" #"Standard_D4_v4" #"Standard_DS3_v2" # "Standard_D3_v2"
+
 vmssscale = 0
 
-idps = "Off"
+idps = "Alert" # Off, Alert, Deny
 
-
-
+testtype        = "iperf3" # iperf3 or vegeta
+testduration    = "5"
+# vegeta specific
+testprotocol    = "http" # not relevant if testtype=iperf3
+# iperf3 specific
+testiperf3flows = "64" # not relevant if testtype=vegeta
 

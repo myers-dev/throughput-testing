@@ -2,6 +2,10 @@ output "resource_group_name" {
   value = var.resource_group_name
 }
 
+output "location" {
+  value = var.location
+}
+
 output "Spoke1_Linux_public_ip" {
   value = azurerm_public_ip.pip["spoke1"].ip_address
 }

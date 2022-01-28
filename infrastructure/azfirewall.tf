@@ -64,7 +64,7 @@ resource "azurerm_firewall_policy_rule_collection_group" "azfw-policy" {
       protocols             = ["Any"]
       source_addresses      = ["*"]
       destination_addresses = ["*"]
-      destination_ports     = ["5201"]
+      destination_ports     = ["5201-7201"]
     }
     rule {
       name                  = "http"
@@ -93,6 +93,13 @@ resource "azurerm_firewall_policy_rule_collection_group" "azfw-policy" {
       source_addresses      = ["*"]
       destination_addresses = ["*"]
       destination_ports     = ["9999"]
+    }
+    rule {
+      name                  = "vxlan"
+      protocols             = ["Any"]
+      source_addresses      = ["*"]
+      destination_addresses = ["*"]
+      destination_ports     = ["4789"]
     }
     rule {
       name                  = "icmp"

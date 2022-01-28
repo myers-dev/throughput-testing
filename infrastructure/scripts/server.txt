@@ -4,14 +4,14 @@
 apt-get update -y
 apt-get upgrade -y
 apt-get install iproute2 -y
-apt-get install wrk -y
+#apt-get install wrk -y
 apt-get install iperf3 -y
 apt-get install ntp -y
 apt-get install nginx -y
 apt-get install unzip -y
 
-# iperf3 daemon
-iperf3 -s -D
+# Increasing number of descriptors
+ulimit -n 10000
 
 # Disabling default logging for nginx
 sed -i s/access_log/"# access_log"/ /etc/nginx/nginx.conf 
@@ -27,7 +27,7 @@ sed -i "s/# listen 443/  listen 443/" /etc/nginx/sites-available/default
 
 # generate random file
 mv /var/www/html/index.nginx-debian.html /var/www/html/index.nginx-debian.html.bac 
-dd if=/dev/urandom  bs=1024 count=1000 | base64 > /var/www/html/index.nginx-debian.html # for 1M count = 1000
+dd if=/dev/urandom bs=1024 count=1000 | base64 > /var/www/html/index.nginx-debian.html # for 1M count = 1000
 
 service nginx restart
 
@@ -54,6 +54,8 @@ cd ~
 cat << EOF>server.py
 from azure.servicebus import ServiceBusClient, ServiceBusMessage
 import socket
+import random
+import os
 
 def get_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -65,11 +67,12 @@ def get_ip():
         IP = '127.0.0.1'
     finally:
         s.close()
-    return IP
+    return(IP)
 
-def send_single_message(sender):
+def send_single_message(sender,msgtext):
     # create a Service Bus message
-    message = ServiceBusMessage(get_ip())
+    
+    message = ServiceBusMessage( msgtext )
     # send the message to the queue
     sender.send_messages(message)
     #print("Sent a single message")
@@ -81,12 +84,17 @@ with servicebus_client:
     # get a Queue Sender object to send messages to the queue
     sender = servicebus_client.get_queue_sender(queue_name='${QUEUE_NAME}')
     with sender:
-        # send one message        
-        send_single_message(sender)
+        server_port =  int(random.random()*(7201 - 5201) + 5201) 
+        msgtext =  get_ip() + " " + str(server_port)  
+        send_single_message(sender,msgtext)
 
 #print("Done sending messages")
 #print("-----------------------")
+
+o=os.popen(f"iperf3 -s -D -p {server_port}")
+
 EOF
 
 #Uncomment for traffic generator
 python3 server.py
+
