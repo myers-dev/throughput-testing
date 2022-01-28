@@ -4,31 +4,36 @@
 
 The exercise aims to evaluate how the Azure Firewall Premium SKU performs under stress. A number of variables were measured, including throughput and delay for both IP and HTTP/HTTPS traffic. The performance of the Firewall was evaluated for different modes of IDPS - Alert, Alert and Deny, and Off. Some of the tests were performed without enabling AFWEnableAccelnet. 
 
+In the lab, flows between spokes cross the firewall of the hub. VMSS served as a source and destination for the IP and HTTP(S) flows. VMSS provides on-demand scaling capabilities as well as the ability to control the maximum network bandwidth and maximum number of vCPUs per instance. 
+
+In addition, the scenario of sources and destinations deployed on AKS was tested. We also tested scenarios where Standard Load Balancers were deployed in front of the "servers." Both did not outperform VMSS. 
+
 The topology ( with slight variabions ) for the throughput testing is shown below. This is a classic hub-and-spoke topology with a deployment of Azure Firewall Premium in the hub. 
 Deployment code ( terraform ) is in [this](infrastructure/) folder.
 
 The Firewall evaluated from the perspective of :
 
-1. One flow performance
+1. One flow performance ( AFWEnableAccelnet on/off )
 
-1. Combined IP performance ( IDPS Off)
+1. Combined IP performance ( IDPS Off) ( AFWEnableAccelnet on )
 
-1. IDPS related tests:
+1. IDPS related tests ( AFWEnableAccelnet on ):
 
-   * HTTP(s) performance ( IDPS Off, Alert, Alert and Deny )
+   * HTTP(s) throughput ( IDPS Off, Alert, Alert and Deny )
 
-   * IP performance ( IDPS Off, Alert , Alert and Deny )
+   * IP throughput ( IDPS Off, Alert , Alert and Deny )
 
-   * RTT for IP ( IDPS Off, Alert, Alert and Deny)
+   * Relative RTT for IP ( IDPS Off, Alert, Alert and Deny)
 
-   * RTT for HTTP(s) ( IDPS Off, Alert, Alert and Deny)
+   * Relative RTT for HTTP(s) ( IDPS Off, Alert, Alert and Deny)
 
+*) RTT is provided only as a relative measurement.See the note on RTT reporting in iperf3 and vegeta. 
 
 
 ![Topology](supplementals/img/Topology0.png)
 
 
-There were three different VM sizes used, namely D4_v4, D5_v2, and DS4_v2.
+There were four different VM sizes used, namely D4_v4, D5_v2, DS4_v2 and D48_v3.
 
 In comparison to the others, D4_v4 displays the best ratio of vCPU to network performance. Read more on performance data of VMs above [here](https://docs.microsoft.com/en-us/azure/virtual-machines/dv2-dsv2-series) and [here](https://docs.microsoft.com/en-us/azure/virtual-machines/dv2-dsv2-series)
 
@@ -41,9 +46,15 @@ Summary of the VM performance:
 |DS4_v2|8|6,000|https://docs.microsoft.com/en-us/azure/virtual-machines/dv2-dsv2-series
 |D48_v3|48|24,000|https://docs.microsoft.com/en-us/azure/virtual-machines/dv3-dsv3-series
 
+You should consider Azure quotas if you decide to repeat the tests - Azure subscription limits and quotas - https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/azure-subscription-service-limits
+
+Be sure to minimize Firewall transit traffic before changing the IDPS mode. You might see the following error otherwise.
+
+![error](supplementals/img/firewall%20policy.png)
+
 ## Baseline tests. 
 
-Learn more about Azure Firewall Performance Boost here - https://docs.microsoft.com/en-us/azure/firewall/firewall-performance . 
+Learn more about Azure Firewall Performance Boost here - https://docs.microsoft.com/en-us/azure/firewall/firewall-performance. 
 
 Below you will find the results of Iperf3 tests over the Azure Firewall Premium, with the AFWEnableAccelnet is set to False.
 
