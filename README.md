@@ -147,11 +147,6 @@ To enable the Azure Firewall Premium performance boost, run the following Azure 
 
 Commands are run in Azure PowerShell to enable the features. For the feature to immediately take effect, an operation needs to be run on the firewall. This can be a rule change (least intrusive), a setting change, or a stop/start operation. Otherwise, the firewall/s is updated with the feature within several days.
 
-[5:05 PM] Mark Gakman
-This is what we wrote in the docs for the preview feature
-
-
-
 ```
 Select-AzSubscription -Subscription <subscription_name>
 
