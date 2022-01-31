@@ -554,7 +554,7 @@ We used vegeta ( https://github.com/tsenart/vegeta ) and nginx ( https://github.
 
 Vegeta used with the rate set to 50 for http(s), nginx generate 1Mb random file. 
 
-In summary, with IDPS off, the http(s) throughput is proportional to the size of VMSS, but with IDPS set to Alert and Deny, the throughput dropped to 9Gbps. With Alert, performance was decreased by 10%. Read more below. 
+In summary, with IDPS off, the http(s) throughput is proportional to the size of VMSS, but with IDPS set to Alert and Deny, the throughput dropped to 9Gbps. With Alert, performance was decreased by 10% compared to performance of the firewall with IDPS off. Read more below. 
 
 Additionally, we have tested scenarios where source/destinations are set up on AKS clusters. We also tested the scenario with a standard load balancer in front of the servers. Both of them have not provided any performance benefits, despite rebalancing sources and destinations. 
 
