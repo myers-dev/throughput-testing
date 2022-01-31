@@ -466,6 +466,15 @@ Visualization ( aggregate ), Note the throughput is symmetrical
 
 ## RTT measurements in iperf3 and vegeta
 
+RTT data is only provided as a relative and comparative measure. In a hub-spoke environment with IDPS off, round trip time from VM to VM is 2.35 milliseconds.
+
+Iperf3 and vegeta use different reporting methods. Additionally, server processing delays need to be taken into consideration. Accordingly, you should only use them relative to the other measurements I mentioned above. 
+For example, you can compare RTT for transit traffic with IDPS OFF versus IDPS Alert and Deny and see the percentage of change. Take the scale into consideration!
+
+![comparsion](supplementals/stats/http-latency-http-alert-vs-deny.png)
+
+### Iperf3 latency calculation/reporting 
+
 As per [esnet/iperf](https://github.com/esnet/iperf/commit/432ef7ebb3abfedcb87b717b251eb72fc1a2d0c3) :
 
 >Retrieve RTT information on platforms supporting it.
@@ -515,6 +524,7 @@ Reported by iperf3 :  ( iperf3 --length 56 -P64 -t 180 -c 10.1.0.4 -J )
  "mean_rtt":     1290
 
 ```
+### Vegeta latency calculation/reporting 
 
 To convert vegeta-reported lateny to ms divide the result by 1,000,000
 
